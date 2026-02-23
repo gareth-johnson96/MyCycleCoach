@@ -135,4 +135,24 @@ public class TrainingPlanController {
         PlannedSessionResponse alternateSession = trainingPlanService.generateAlternateSession(sessionId, userId);
         return ResponseEntity.ok(alternateSession);
     }
+
+    @PostMapping("/generate/test-data")
+    @Operation(
+            summary = "Generate random test data",
+            description =
+                    "Generate random completed rides and upcoming sessions for testing the front end. Creates realistic test data with random session types, distances, and intensities.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Test data generated successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid input"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "404", description = "No active plan found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<TrainingPlanDetailResponse> generateTestData(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate) {
+        Long userId = getCurrentUserId();
+        TrainingPlanDetailResponse response = trainingPlanService.generateRandomTestData(userId, fromDate, toDate);
+        return ResponseEntity.ok(response);
+    }
 }

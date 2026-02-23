@@ -12,12 +12,15 @@ import static org.mockito.Mockito.times;
 import com.mycyclecoach.feature.trainingplan.domain.PlannedSession;
 import com.mycyclecoach.feature.trainingplan.domain.TrainingPlan;
 import com.mycyclecoach.feature.trainingplan.dto.CompleteSessionRequest;
+import com.mycyclecoach.feature.trainingplan.dto.PlannedSessionResponse;
+import com.mycyclecoach.feature.trainingplan.dto.TrainingPlanDetailResponse;
 import com.mycyclecoach.feature.trainingplan.dto.TrainingPlanResponse;
 import com.mycyclecoach.feature.trainingplan.repository.PlannedSessionRepository;
 import com.mycyclecoach.feature.trainingplan.repository.TrainingPlanRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -653,5 +656,71 @@ class TrainingPlanServiceImplTest {
         then(plannedSessionRepository).should().findById(sessionId);
         then(trainingPlanRepository).should().findById(planId);
         then(plannedSessionRepository).should(never()).save(any(PlannedSession.class));
+    }
+
+    @Test
+    void shouldGenerateRandomTestDataForDateRange() {
+        // given
+        Long userId = 1L;
+        Long planId = 1L;
+        LocalDate fromDate = LocalDate.now().minusDays(10);
+        LocalDate toDate = LocalDate.now().plusDays(10);
+
+        TrainingPlan activePlan = TrainingPlan.builder()
+                .id(planId)
+                .userId(userId)
+                .startDate(fromDate)
+                .endDate(toDate.plusWeeks(12))
+                .goal("General Fitness")
+                .status("ACTIVE")
+                .generatedAt(LocalDateTime.now())
+                .build();
+
+        given(trainingPlanRepository.findAll()).willReturn(List.of(activePlan));
+        given(plannedSessionRepository.save(any(PlannedSession.class)))
+                .willAnswer(invocation -> invocation.getArgument(0));
+
+        // when
+        TrainingPlanDetailResponse response = trainingPlanService.generateRandomTestData(userId, fromDate, toDate);
+
+        // then
+        assertThat(response).isNotNull();
+        assertThat(response.id()).isEqualTo(planId);
+        assertThat(response.userId()).isEqualTo(userId);
+
+        // Verify that completed sessions are in the past
+        response.completedSessions().forEach(session -> {
+            assertThat(session.scheduledDate()).isBefore(LocalDate.now());
+            assertThat(session.status()).isEqualTo("COMPLETED");
+        });
+
+        // Verify that planned sessions are today or in the future
+        response.trainingPlan().forEach(session -> {
+            assertThat(session.scheduledDate()).isAfterOrEqualTo(LocalDate.now());
+            assertThat(session.status()).isEqualTo("SCHEDULED");
+        });
+
+        // Verify session properties are randomized and realistic
+        List<PlannedSessionResponse> allSessions = new ArrayList<>();
+        allSessions.addAll(response.completedSessions());
+        allSessions.addAll(response.trainingPlan());
+
+        if (!allSessions.isEmpty()) {
+            allSessions.forEach(session -> {
+                assertThat(session.type()).isNotNull();
+                assertThat(session.distance()).isNotNull();
+                assertThat(session.distance()).isGreaterThanOrEqualTo(BigDecimal.valueOf(5));
+                assertThat(session.distance()).isLessThanOrEqualTo(BigDecimal.valueOf(100));
+                assertThat(session.duration()).isNotNull();
+                assertThat(session.duration()).isGreaterThanOrEqualTo(30);
+                assertThat(session.duration()).isLessThanOrEqualTo(240);
+                assertThat(session.intensity()).isNotNull();
+                assertThat(session.tss()).isNotNull();
+                assertThat(session.elevation()).isNotNull();
+                assertThat(session.targetZone()).isNotNull();
+            });
+        }
+
+        then(trainingPlanRepository).should().findAll();
     }
 }
