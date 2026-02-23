@@ -36,6 +36,7 @@ dependencies {
     runtimeOnly(libs.jjwt.jackson)
     implementation(libs.flyway.core)
     implementation(libs.flyway.postgresql)
+    implementation(libs.gpx)
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)
     testImplementation(libs.spring.boot.starter.test)
