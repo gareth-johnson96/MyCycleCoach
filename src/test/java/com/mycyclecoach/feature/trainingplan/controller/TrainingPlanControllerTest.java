@@ -236,4 +236,112 @@ class TrainingPlanControllerTest {
 
         then(trainingPlanService).should().markSessionComplete(sessionId, userId, request);
     }
+
+    @Test
+    void shouldGetPlanWithSessionsSuccessfully() throws Exception {
+        // given
+        Long userId = 1L;
+        LocalDate fromDate = LocalDate.now();
+        LocalDate toDate = fromDate.plusDays(10);
+
+        var response = new com.mycyclecoach.feature.trainingplan.dto.TrainingPlanDetailResponse(
+                1L, userId, java.util.List.of(), java.util.List.of());
+        given(trainingPlanService.getPlanWithSessions(userId, fromDate, toDate)).willReturn(response);
+
+        // when / then
+        mockMvc.perform(get("/api/v1/training/plan")
+                        .param("fromDate", fromDate.toString())
+                        .param("toDate", toDate.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.userId").value(userId));
+
+        then(trainingPlanService).should().getPlanWithSessions(userId, fromDate, toDate);
+    }
+
+    @Test
+    void shouldGenerateSessionsForDateRangeSuccessfully() throws Exception {
+        // given
+        Long userId = 1L;
+        LocalDate fromDate = LocalDate.now();
+        LocalDate toDate = fromDate.plusDays(5);
+
+        var sessions = java.util.List.of(new com.mycyclecoach.feature.trainingplan.dto.PlannedSessionResponse(
+                1L, 1L, fromDate, "EASY", java.math.BigDecimal.valueOf(10), 60, "LOW", "SCHEDULED", 50, 100, "ZONE2"));
+        given(trainingPlanService.generateSessionsForDateRange(userId, fromDate, toDate))
+                .willReturn(sessions);
+
+        // when / then
+        mockMvc.perform(post("/api/v1/training/plan/generate/sessions")
+                        .param("fromDate", fromDate.toString())
+                        .param("toDate", toDate.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(1L))
+                .andExpect(jsonPath("$[0].type").value("EASY"));
+
+        then(trainingPlanService).should().generateSessionsForDateRange(userId, fromDate, toDate);
+    }
+
+    @Test
+    void shouldGenerateSessionForSingleDateSuccessfully() throws Exception {
+        // given
+        Long userId = 1L;
+        LocalDate date = LocalDate.now();
+
+        var session = new com.mycyclecoach.feature.trainingplan.dto.PlannedSessionResponse(
+                1L, 1L, date, "EASY", java.math.BigDecimal.valueOf(10), 60, "LOW", "SCHEDULED", 50, 100, "ZONE2");
+        given(trainingPlanService.generateSessionForDate(userId, date)).willReturn(session);
+
+        // when / then
+        mockMvc.perform(post("/api/v1/training/plan/generate/sessions").param("fromDate", date.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(1L))
+                .andExpect(jsonPath("$[0].type").value("EASY"));
+
+        then(trainingPlanService).should().generateSessionForDate(userId, date);
+    }
+
+    @Test
+    void shouldGenerateAlternateSessionSuccessfully() throws Exception {
+        // given
+        Long userId = 1L;
+        Long sessionId = 1L;
+
+        var alternateSession = new com.mycyclecoach.feature.trainingplan.dto.PlannedSessionResponse(
+                2L,
+                1L,
+                LocalDate.now(),
+                "RECOVERY",
+                java.math.BigDecimal.valueOf(8),
+                48,
+                "MEDIUM",
+                "SCHEDULED",
+                40,
+                70,
+                "ZONE1");
+        given(trainingPlanService.generateAlternateSession(sessionId, userId)).willReturn(alternateSession);
+
+        // when / then
+        mockMvc.perform(post("/api/v1/training/plan/session/{sessionId}/alternate", sessionId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(2L))
+                .andExpect(jsonPath("$.type").value("RECOVERY"));
+
+        then(trainingPlanService).should().generateAlternateSession(sessionId, userId);
+    }
+
+    @Test
+    void shouldReturn400WhenGeneratingAlternateForNonExistentSession() throws Exception {
+        // given
+        Long userId = 1L;
+        Long sessionId = 999L;
+        given(trainingPlanService.generateAlternateSession(sessionId, userId))
+                .willThrow(new IllegalArgumentException("Session not found with id: " + sessionId));
+
+        // when / then
+        mockMvc.perform(post("/api/v1/training/plan/session/{sessionId}/alternate", sessionId))
+                .andExpect(status().isBadRequest());
+
+        then(trainingPlanService).should().generateAlternateSession(sessionId, userId);
+    }
 }

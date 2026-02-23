@@ -32,6 +32,13 @@ public class PlannedSession {
 
     private String intensity;
 
+    private Integer tss;
+
+    private Integer elevation;
+
+    @Column(name = "target_zone")
+    private String targetZone;
+
     @Column(nullable = false)
     private String status;
 
