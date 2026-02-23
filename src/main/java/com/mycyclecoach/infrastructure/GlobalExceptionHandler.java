@@ -1,5 +1,8 @@
 package com.mycyclecoach.infrastructure;
 
+import com.mycyclecoach.feature.auth.exception.InvalidCredentialsException;
+import com.mycyclecoach.feature.auth.exception.TokenExpiredException;
+import com.mycyclecoach.feature.auth.exception.UserAlreadyExistsException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
@@ -23,6 +26,34 @@ public class GlobalExceptionHandler {
                 .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
                 .collect(Collectors.joining(", "));
         return new ErrorResponse(400, "Bad Request", message, request.getRequestURI(), LocalDateTime.now());
+    }
+
+    @ExceptionHandler(UserAlreadyExistsException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleUserAlreadyExists(UserAlreadyExistsException ex, HttpServletRequest request) {
+        log.warn("User already exists: {}", ex.getMessage());
+        return new ErrorResponse(400, "Bad Request", ex.getMessage(), request.getRequestURI(), LocalDateTime.now());
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleInvalidCredentials(InvalidCredentialsException ex, HttpServletRequest request) {
+        log.warn("Invalid credentials: {}", ex.getMessage());
+        return new ErrorResponse(400, "Bad Request", ex.getMessage(), request.getRequestURI(), LocalDateTime.now());
+    }
+
+    @ExceptionHandler(TokenExpiredException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleTokenExpired(TokenExpiredException ex, HttpServletRequest request) {
+        log.warn("Token expired: {}", ex.getMessage());
+        return new ErrorResponse(400, "Bad Request", ex.getMessage(), request.getRequestURI(), LocalDateTime.now());
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleIllegalArgument(IllegalArgumentException ex, HttpServletRequest request) {
+        log.warn("Invalid argument: {}", ex.getMessage());
+        return new ErrorResponse(400, "Bad Request", ex.getMessage(), request.getRequestURI(), LocalDateTime.now());
     }
 
     @ExceptionHandler(Exception.class)

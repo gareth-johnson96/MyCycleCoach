@@ -69,10 +69,10 @@ services:
       target: development
     container_name: mycyclecoach-app
     environment:
-      DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-mycyclecoach}
-      DB_USERNAME: ${DB_USERNAME:-cyclecoach}
-      DB_PASSWORD: ${DB_PASSWORD:-localdev123}
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-mycyclecoach}
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-postgres}
+      JWT_SECRET: ${JWT_SECRET:-your-secret-key-should-be-at-least-256-bits-long-for-hs512}
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
     ports:
       - "8080:8080"
@@ -81,10 +81,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      kafka:
-        condition: service_started
-      zookeeper:
-        condition: service_started
     restart: unless-stopped
 
 volumes:
