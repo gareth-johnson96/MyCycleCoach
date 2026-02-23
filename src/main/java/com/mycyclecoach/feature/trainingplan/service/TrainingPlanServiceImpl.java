@@ -13,6 +13,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -288,5 +289,87 @@ public class TrainingPlanServiceImpl implements TrainingPlanService {
                 plan.getEndDate(),
                 plan.getGoal(),
                 plan.getStatus());
+    }
+
+    @Override
+    @Transactional
+    public TrainingPlanDetailResponse generateRandomTestData(Long userId, LocalDate fromDate, LocalDate toDate) {
+        TrainingPlan plan = getActivePlan(userId);
+        Random random = new Random();
+
+        List<PlannedSession> completedSessions = new ArrayList<>();
+        List<PlannedSession> plannedSessions = new ArrayList<>();
+
+        LocalDate today = LocalDate.now();
+        LocalDate currentDate = fromDate;
+
+        while (!currentDate.isAfter(toDate)) {
+            // Randomly decide whether to create a session for this date (60% chance)
+            if (random.nextDouble() < 0.6) {
+                PlannedSession session = createRandomSession(plan.getId(), currentDate, random);
+
+                // If the date is in the past, mark it as completed (80% chance) or skipped (20% chance)
+                if (currentDate.isBefore(today)) {
+                    if (random.nextDouble() < 0.8) {
+                        session.setStatus("COMPLETED");
+                        session.setCompletedAt(
+                                currentDate.atTime(random.nextInt(20) + 4, random.nextInt(60)));
+                        completedSessions.add(session);
+                    } else {
+                        session.setStatus("SKIPPED");
+                    }
+                } else {
+                    // Future sessions are scheduled
+                    session.setStatus("SCHEDULED");
+                    plannedSessions.add(session);
+                }
+
+                plannedSessionRepository.save(session);
+            }
+
+            currentDate = currentDate.plusDays(1);
+        }
+
+        log.info(
+                "Generated random test data for userId: {} - {} completed, {} planned sessions",
+                userId,
+                completedSessions.size(),
+                plannedSessions.size());
+
+        List<PlannedSessionResponse> completedResponses =
+                completedSessions.stream().map(this::mapSessionToResponse).toList();
+        List<PlannedSessionResponse> plannedResponses =
+                plannedSessions.stream().map(this::mapSessionToResponse).toList();
+
+        return new TrainingPlanDetailResponse(plan.getId(), plan.getUserId(), completedResponses, plannedResponses);
+    }
+
+    private PlannedSession createRandomSession(Long planId, LocalDate date, Random random) {
+        String[] types = {"EASY", "TEMPO", "LONG", "RECOVERY", "INTERVALS", "ENDURANCE"};
+        String[] intensities = {"LOW", "MEDIUM", "HIGH"};
+        String[] targetZones = {"ZONE1", "ZONE2", "ZONE3", "ZONE4", "ZONE5"};
+
+        String type = types[random.nextInt(types.length)];
+        String intensity = intensities[random.nextInt(intensities.length)];
+        String targetZone = targetZones[random.nextInt(targetZones.length)];
+
+        // Randomize values with realistic ranges
+        BigDecimal distance = BigDecimal.valueOf(5 + random.nextInt(95)); // 5-100 km
+        Integer duration = 30 + random.nextInt(210); // 30-240 minutes
+        Integer tss = 20 + random.nextInt(180); // 20-200 TSS
+        Integer elevation = 0 + random.nextInt(2000); // 0-2000 m
+
+        return PlannedSession.builder()
+                .planId(planId)
+                .scheduledDate(date)
+                .type(type)
+                .distance(distance)
+                .duration(duration)
+                .intensity(intensity)
+                .tss(tss)
+                .elevation(elevation)
+                .targetZone(targetZone)
+                .status("SCHEDULED")
+                .build();
     }
 }

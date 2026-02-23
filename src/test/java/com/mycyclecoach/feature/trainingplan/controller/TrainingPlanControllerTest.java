@@ -344,4 +344,48 @@ class TrainingPlanControllerTest {
 
         then(trainingPlanService).should().generateAlternateSession(sessionId, userId);
     }
+
+    @Test
+    void shouldGenerateRandomTestDataSuccessfully() throws Exception {
+        // given
+        Long userId = 1L;
+        Long planId = 1L;
+        LocalDate fromDate = LocalDate.now().minusDays(10);
+        LocalDate toDate = LocalDate.now().plusDays(10);
+
+        com.mycyclecoach.feature.trainingplan.dto.TrainingPlanDetailResponse response =
+                new com.mycyclecoach.feature.trainingplan.dto.TrainingPlanDetailResponse(
+                        planId, userId, java.util.List.of(), java.util.List.of());
+
+        given(trainingPlanService.generateRandomTestData(userId, fromDate, toDate)).willReturn(response);
+
+        // when / then
+        mockMvc.perform(post("/api/v1/training/plan/generate/test-data")
+                        .param("fromDate", fromDate.toString())
+                        .param("toDate", toDate.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(planId))
+                .andExpect(jsonPath("$.userId").value(userId));
+
+        then(trainingPlanService).should().generateRandomTestData(userId, fromDate, toDate);
+    }
+
+    @Test
+    void shouldReturn404WhenNoActivePlanFoundForTestData() throws Exception {
+        // given
+        Long userId = 1L;
+        LocalDate fromDate = LocalDate.now().minusDays(10);
+        LocalDate toDate = LocalDate.now().plusDays(10);
+
+        given(trainingPlanService.generateRandomTestData(userId, fromDate, toDate))
+                .willThrow(new IllegalArgumentException("No active plan found for userId: " + userId));
+
+        // when / then
+        mockMvc.perform(post("/api/v1/training/plan/generate/test-data")
+                        .param("fromDate", fromDate.toString())
+                        .param("toDate", toDate.toString()))
+                .andExpect(status().isBadRequest());
+
+        then(trainingPlanService).should().generateRandomTestData(userId, fromDate, toDate);
+    }
 }

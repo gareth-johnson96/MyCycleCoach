@@ -22,4 +22,6 @@ public interface TrainingPlanService {
     void markSessionComplete(Long sessionId, Long userId, CompleteSessionRequest request);
 
     PlannedSessionResponse generateAlternateSession(Long sessionId, Long userId);
+
+    TrainingPlanDetailResponse generateRandomTestData(Long userId, LocalDate fromDate, LocalDate toDate);
 }
