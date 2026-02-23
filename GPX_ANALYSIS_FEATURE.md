@@ -2,7 +2,7 @@
 
 ## Overview
 
-The GPX Analysis feature allows users to upload GPS Exchange Format (GPX) files and automatically detect and analyze climbs within the route.
+The GPX Analysis feature allows users to upload GPS Exchange Format (GPX) files and automatically detect and analyze climbs within the route. The feature also provides **route time estimation** based on distance, elevation, and climb gradients.
 
 ## Endpoints
 
@@ -40,6 +40,8 @@ Upload a GPX file for analysis.
       "endPointIndex": 58
     }
   ],
+  "totalDistanceKm": 15.7,
+  "estimatedRideTimeMinutes": 42.3,
   "uploadedAt": "2026-02-23T21:00:00"
 }
 ```
@@ -64,6 +66,55 @@ Retrieve previously analyzed GPX file data.
 - `200 OK`: GPX analysis retrieved successfully
 - `404 Not Found`: GPX file with the specified ID does not exist
 - `500 Internal Server Error`: Unexpected server error
+
+### Analyze GPX File by Filename
+
+**GET** `/api/v1/gpx/analyze/{filename}`
+
+Analyze a previously uploaded GPX file by its filename and get route time estimation.
+
+**Parameters:**
+- `filename` (path parameter, required): The filename of the GPX file (e.g., `morning_ride.gpx`)
+
+**Response:** Same as upload endpoint
+
+**Status Codes:**
+- `200 OK`: GPX analysis retrieved successfully
+- `404 Not Found`: GPX file with the specified filename does not exist
+- `500 Internal Server Error`: Unexpected server error
+
+**Example:**
+```bash
+curl http://localhost:8080/api/v1/gpx/analyze/morning_ride.gpx
+```
+
+## Route Time Estimation
+
+The system provides an estimated ride time based on the route's terrain characteristics:
+
+### Speed Assumptions
+
+- **Flat/Downhill sections**: 25 km/h average speed
+- **Moderate climbs** (2-6% gradient): 15 km/h average speed
+- **Steep climbs** (>6% gradient): 8 km/h average speed
+
+### Calculation Method
+
+1. The route is divided into segments between waypoints
+2. Each segment is checked to see if it's part of a detected climb
+3. Speed is adjusted based on the segment's gradient:
+   - If the segment is part of a climb with gradient ≥ 6%, use 8 km/h
+   - If the segment is part of a climb with gradient 2-6%, use 15 km/h
+   - Otherwise (flat or downhill), use 25 km/h
+4. Time for each segment is calculated: `time = distance / speed`
+5. Total estimated time is the sum of all segment times
+
+### Response Fields
+
+- **totalDistanceKm**: Total distance of the route in kilometers
+- **estimatedRideTimeMinutes**: Estimated time to complete the route in minutes
+
+**Note:** These are rough estimates suitable for planning purposes. Actual ride times may vary based on rider fitness, weather conditions, road surface, and other factors.
 
 ## Climb Detection Algorithm
 
@@ -131,6 +182,9 @@ curl -X POST http://localhost:8080/api/v1/gpx/upload \
 
 # Get analysis by ID
 curl http://localhost:8080/api/v1/gpx/123
+
+# Analyze by filename (for previously uploaded files)
+curl http://localhost:8080/api/v1/gpx/analyze/ride.gpx
 ```
 
 ### Using the Test Script
@@ -223,5 +277,7 @@ Potential improvements for future iterations:
 4. **Descent Analysis**: Analyze descents for safety metrics
 5. **Performance Metrics**: Calculate power estimates and effort scores
 6. **Batch Upload**: Support multiple GPX files in a single request
-7. **User Preferences**: Allow users to customize climb detection thresholds
+7. **User Preferences**: Allow users to customize climb detection thresholds and speed assumptions for time estimation
 8. **Export Formats**: Export analysis as PDF or CSV
+9. **Weather Integration**: Factor in wind and weather conditions for more accurate time estimates
+10. **Personalized Time Estimates**: Adjust estimates based on user's past performance data
