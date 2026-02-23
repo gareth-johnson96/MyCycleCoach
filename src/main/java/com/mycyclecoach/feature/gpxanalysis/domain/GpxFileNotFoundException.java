@@ -4,4 +4,8 @@ public class GpxFileNotFoundException extends RuntimeException {
     public GpxFileNotFoundException(Long id) {
         super("GPX file not found with id: " + id);
     }
+
+    public GpxFileNotFoundException(String message) {
+        super(message);
+    }
 }

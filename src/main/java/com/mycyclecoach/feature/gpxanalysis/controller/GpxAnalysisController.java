@@ -36,4 +36,12 @@ public class GpxAnalysisController {
     public GpxAnalysisResponse getGpxAnalysis(@PathVariable Long gpxFileId) {
         return gpxAnalysisService.getGpxAnalysis(gpxFileId);
     }
+
+    @GetMapping("/analyze/{filename}")
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "Analyze a GPX file by filename")
+    @ApiResponse(responseCode = "404", description = "GPX file not found")
+    public GpxAnalysisResponse analyzeByFilename(@PathVariable String filename) {
+        return gpxAnalysisService.analyzeByFilename(filename);
+    }
 }

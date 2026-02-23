@@ -70,6 +70,20 @@ public class GpxAnalysisServiceImpl implements GpxAnalysisService {
         return gpxAnalysisMapper.toGpxAnalysisResponse(gpxFile, climbs);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public GpxAnalysisResponse analyzeByFilename(String filename) {
+        log.info("Analyzing GPX file by filename={}", filename);
+
+        GpxFile gpxFile = gpxFileRepository
+                .findByFilename(filename)
+                .orElseThrow(() -> new GpxFileNotFoundException("GPX file not found with filename: " + filename));
+
+        List<Climb> climbs = climbRepository.findByGpxFileId(gpxFile.getId());
+
+        return gpxAnalysisMapper.toGpxAnalysisResponse(gpxFile, climbs);
+    }
+
     private List<WayPoint> extractWayPoints(String gpxContent) {
         try {
             java.nio.file.Path tempFile = java.nio.file.Files.createTempFile("gpx", ".gpx");
