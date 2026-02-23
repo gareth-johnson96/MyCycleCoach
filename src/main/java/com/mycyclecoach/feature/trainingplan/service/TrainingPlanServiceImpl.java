@@ -245,21 +245,7 @@ public class TrainingPlanServiceImpl implements TrainingPlanService {
         LocalDate currentDate = today;
         for (int week = 0; week < 12; week++) {
             for (int day = 0; day < 3; day++) {
-                PlannedSession session = PlannedSession.builder()
-                        .planId(savedPlan.getId())
-                        .scheduledDate(currentDate)
-                        .type(day == 0 ? "EASY" : day == 1 ? "TEMPO" : "LONG")
-                        .distance(
-                                day == 0
-                                        ? BigDecimal.valueOf(10)
-                                        : day == 1 ? BigDecimal.valueOf(15) : BigDecimal.valueOf(20))
-                        .duration(day == 0 ? 60 : day == 1 ? 75 : 120)
-                        .intensity(day == 0 ? "LOW" : day == 1 ? "MEDIUM" : "HIGH")
-                        .tss(day == 0 ? 50 : day == 1 ? 75 : 100)
-                        .elevation(day == 0 ? 100 : day == 1 ? 200 : 400)
-                        .targetZone(day == 0 ? "ZONE2" : day == 1 ? "ZONE3" : "ZONE4")
-                        .status("SCHEDULED")
-                        .build();
+                PlannedSession session = createSessionForDate(savedPlan.getId(), currentDate);
                 plannedSessionRepository.save(session);
                 currentDate = currentDate.plusDays(2);
             }

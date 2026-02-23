@@ -590,7 +590,6 @@ class TrainingPlanServiceImplTest {
 
         // then
         assertThat(response).isNotNull();
-        assertThat(response.type()).isNotEqualTo("EASY");
         assertThat(response.type()).isEqualTo("RECOVERY");
         then(plannedSessionRepository).should().findById(sessionId);
         then(trainingPlanRepository).should().findById(planId);
