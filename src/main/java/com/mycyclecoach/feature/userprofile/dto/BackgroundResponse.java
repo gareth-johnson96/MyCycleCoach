@@ -1,6 +1,8 @@
 package com.mycyclecoach.feature.userprofile.dto;
 
-public record BackgroundRequest(
+public record BackgroundResponse(
+        Long id,
+        Long userId,
         Integer yearsTraining,
         Integer weeklyVolume,
         String trainingHistory,

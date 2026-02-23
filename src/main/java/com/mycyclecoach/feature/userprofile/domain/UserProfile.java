@@ -27,6 +27,14 @@ public class UserProfile {
     @Column(name = "experience_level")
     private String experienceLevel;
 
+    private BigDecimal height;
+
+    @Column(name = "current_ftp")
+    private Integer currentFtp;
+
+    @Column(name = "max_hr")
+    private Integer maxHr;
+
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 

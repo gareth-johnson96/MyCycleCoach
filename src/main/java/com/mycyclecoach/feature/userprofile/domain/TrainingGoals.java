@@ -22,6 +22,12 @@ public class TrainingGoals {
     @Column(nullable = false)
     private String goals;
 
+    @Column(name = "target_event")
+    private String targetEvent;
+
+    @Column(name = "target_event_date")
+    private LocalDateTime targetEventDate;
+
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
