@@ -134,7 +134,7 @@ public class UserProfileController {
             summary = "Submit user questionnaire",
             description =
                     "Submit a comprehensive questionnaire upon account creation that populates the user's profile,"
-                        + " training background, and goals")
+                            + " training background, and goals")
     @ApiResponses({
         @ApiResponse(responseCode = "201", description = "Questionnaire submitted successfully"),
         @ApiResponse(responseCode = "400", description = "Invalid input"),

@@ -42,8 +42,7 @@ public class UserProfileServiceImpl implements UserProfileService {
     public BackgroundResponse getBackground(Long userId) {
         TrainingBackground background = trainingBackgroundRepository
                 .findByUserId(userId)
-                .orElseThrow(
-                        () -> new IllegalArgumentException("Training background not found for userId: " + userId));
+                .orElseThrow(() -> new IllegalArgumentException("Training background not found for userId: " + userId));
 
         return new BackgroundResponse(
                 background.getId(),
@@ -65,11 +64,7 @@ public class UserProfileServiceImpl implements UserProfileService {
                 .orElseThrow(() -> new IllegalArgumentException("Training goals not found for userId: " + userId));
 
         return new GoalsResponse(
-                goals.getId(),
-                goals.getUserId(),
-                goals.getGoals(),
-                goals.getTargetEvent(),
-                goals.getTargetEventDate());
+                goals.getId(), goals.getUserId(), goals.getGoals(), goals.getTargetEvent(), goals.getTargetEventDate());
     }
 
     @Override

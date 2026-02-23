@@ -14,8 +14,7 @@ public record UpdateProfileRequest(
                 @Max(value = 300, message = "Height must be less than 300")
                 BigDecimal height,
         String experienceLevel,
-        @Min(value = 0, message = "FTP must be at least 0")
-                @Max(value = 600, message = "FTP must be less than 600")
+        @Min(value = 0, message = "FTP must be at least 0") @Max(value = 600, message = "FTP must be less than 600")
                 Integer currentFtp,
         @Min(value = 50, message = "Max HR must be at least 50")
                 @Max(value = 250, message = "Max HR must be less than 250")

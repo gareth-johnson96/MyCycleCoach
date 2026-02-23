@@ -68,8 +68,8 @@ class UserProfileControllerTest {
     void shouldGetProfileSuccessfully() throws Exception {
         // given
         setAuthentication(1L);
-        ProfileResponse response =
-                new ProfileResponse(1L, 1L, 30, new BigDecimal("75.5"), new BigDecimal("180.0"), "Intermediate", 250, 185);
+        ProfileResponse response = new ProfileResponse(
+                1L, 1L, 30, new BigDecimal("75.5"), new BigDecimal("180.0"), "Intermediate", 250, 185);
         given(userProfileService.getProfile(1L)).willReturn(response);
 
         // when / then
@@ -103,8 +103,8 @@ class UserProfileControllerTest {
     void shouldUpdateProfileSuccessfully() throws Exception {
         // given
         setAuthentication(1L);
-        UpdateProfileRequest request = new UpdateProfileRequest(
-                32, new BigDecimal("78.0"), new BigDecimal("182.5"), "Advanced", 270, 190);
+        UpdateProfileRequest request =
+                new UpdateProfileRequest(32, new BigDecimal("78.0"), new BigDecimal("182.5"), "Advanced", 270, 190);
 
         // when / then
         mockMvc.perform(put("/api/v1/user/profile")

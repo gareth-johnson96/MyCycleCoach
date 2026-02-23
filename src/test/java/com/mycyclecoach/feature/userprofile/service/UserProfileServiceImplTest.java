@@ -90,8 +90,8 @@ class UserProfileServiceImplTest {
     void shouldUpdateProfileSuccessfully() {
         // given
         Long userId = 1L;
-        UpdateProfileRequest request = new UpdateProfileRequest(
-                32, new BigDecimal("78.0"), new BigDecimal("182.5"), "Advanced", 270, 190);
+        UpdateProfileRequest request =
+                new UpdateProfileRequest(32, new BigDecimal("78.0"), new BigDecimal("182.5"), "Advanced", 270, 190);
         UserProfile profile = UserProfile.builder()
                 .id(1L)
                 .userId(userId)
@@ -125,8 +125,8 @@ class UserProfileServiceImplTest {
     void shouldThrowExceptionWhenUpdateProfileForNonExistentUser() {
         // given
         Long userId = 99L;
-        UpdateProfileRequest request = new UpdateProfileRequest(
-                32, new BigDecimal("78.0"), new BigDecimal("182.5"), "Advanced", 270, 190);
+        UpdateProfileRequest request =
+                new UpdateProfileRequest(32, new BigDecimal("78.0"), new BigDecimal("182.5"), "Advanced", 270, 190);
         given(userProfileRepository.findByUserId(userId)).willReturn(Optional.empty());
 
         // when / then
@@ -233,8 +233,8 @@ class UserProfileServiceImplTest {
     void shouldUpdateGoalsForExistingUser() {
         // given
         Long userId = 1L;
-        GoalsRequest request = new GoalsRequest(
-                "Improve FTP by 20 watts", "Tour de France", LocalDateTime.of(2025, 7, 1, 0, 0));
+        GoalsRequest request =
+                new GoalsRequest("Improve FTP by 20 watts", "Tour de France", LocalDateTime.of(2025, 7, 1, 0, 0));
         TrainingGoals existingGoals = TrainingGoals.builder()
                 .id(1L)
                 .userId(userId)
