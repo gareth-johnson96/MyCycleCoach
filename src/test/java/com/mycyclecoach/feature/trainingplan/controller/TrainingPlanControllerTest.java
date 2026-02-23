@@ -357,7 +357,8 @@ class TrainingPlanControllerTest {
                 new com.mycyclecoach.feature.trainingplan.dto.TrainingPlanDetailResponse(
                         planId, userId, java.util.List.of(), java.util.List.of());
 
-        given(trainingPlanService.generateRandomTestData(userId, fromDate, toDate)).willReturn(response);
+        given(trainingPlanService.generateRandomTestData(userId, fromDate, toDate))
+                .willReturn(response);
 
         // when / then
         mockMvc.perform(post("/api/v1/training/plan/generate/test-data")

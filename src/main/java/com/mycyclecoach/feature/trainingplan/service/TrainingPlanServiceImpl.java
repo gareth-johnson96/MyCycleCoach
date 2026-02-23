@@ -312,8 +312,7 @@ public class TrainingPlanServiceImpl implements TrainingPlanService {
                 if (currentDate.isBefore(today)) {
                     if (random.nextDouble() < 0.8) {
                         session.setStatus("COMPLETED");
-                        session.setCompletedAt(
-                                currentDate.atTime(random.nextInt(20) + 4, random.nextInt(60)));
+                        session.setCompletedAt(currentDate.atTime(random.nextInt(20) + 4, random.nextInt(60)));
                         completedSessions.add(session);
                     } else {
                         session.setStatus("SKIPPED");
