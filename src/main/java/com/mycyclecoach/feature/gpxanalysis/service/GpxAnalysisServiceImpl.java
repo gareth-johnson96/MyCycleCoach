@@ -6,7 +6,6 @@ import com.mycyclecoach.feature.gpxanalysis.repository.GpxFileRepository;
 import io.jenetics.jpx.GPX;
 import io.jenetics.jpx.WayPoint;
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -44,8 +43,6 @@ public class GpxAnalysisServiceImpl implements GpxAnalysisService {
                 .filename(file.getOriginalFilename())
                 .content(content)
                 .userId(userId)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
                 .build();
 
         gpxFile = gpxFileRepository.save(gpxFile);
@@ -108,7 +105,6 @@ public class GpxAnalysisServiceImpl implements GpxAnalysisService {
 
         int climbStartIndex = -1;
         double climbStartElevation = 0;
-        double cumulativeDistance = 0;
         double climbDistance = 0;
 
         for (int i = 1; i < wayPoints.size(); i++) {
@@ -124,7 +120,6 @@ public class GpxAnalysisServiceImpl implements GpxAnalysisService {
             double elevationDiff = currElevation - prevElevation;
 
             double segmentDistance = calculateDistance(previous, current);
-            cumulativeDistance += segmentDistance;
 
             double gradient = segmentDistance > 0 ? elevationDiff / segmentDistance : 0;
 
