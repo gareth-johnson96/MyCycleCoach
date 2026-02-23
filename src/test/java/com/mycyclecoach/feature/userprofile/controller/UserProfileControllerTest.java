@@ -13,12 +13,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mycyclecoach.config.JwtConfig;
 import com.mycyclecoach.feature.auth.security.JwtAuthenticationFilter;
 import com.mycyclecoach.feature.auth.security.JwtTokenProvider;
-import com.mycyclecoach.feature.userprofile.dto.BackgroundRequest;
-import com.mycyclecoach.feature.userprofile.dto.GoalsRequest;
-import com.mycyclecoach.feature.userprofile.dto.ProfileResponse;
-import com.mycyclecoach.feature.userprofile.dto.UpdateProfileRequest;
+import com.mycyclecoach.feature.userprofile.dto.*;
 import com.mycyclecoach.feature.userprofile.service.UserProfileService;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,7 +68,8 @@ class UserProfileControllerTest {
     void shouldGetProfileSuccessfully() throws Exception {
         // given
         setAuthentication(1L);
-        ProfileResponse response = new ProfileResponse(1L, 1L, 30, new BigDecimal("75.5"), "Intermediate");
+        ProfileResponse response = new ProfileResponse(
+                1L, 1L, 30, new BigDecimal("75.5"), new BigDecimal("180.0"), "Intermediate", 250, 185);
         given(userProfileService.getProfile(1L)).willReturn(response);
 
         // when / then
@@ -80,7 +79,10 @@ class UserProfileControllerTest {
                 .andExpect(jsonPath("$.userId").value(1L))
                 .andExpect(jsonPath("$.age").value(30))
                 .andExpect(jsonPath("$.weight").value(75.5))
-                .andExpect(jsonPath("$.experienceLevel").value("Intermediate"));
+                .andExpect(jsonPath("$.height").value(180.0))
+                .andExpect(jsonPath("$.experienceLevel").value("Intermediate"))
+                .andExpect(jsonPath("$.currentFtp").value(250))
+                .andExpect(jsonPath("$.maxHr").value(185));
 
         then(userProfileService).should().getProfile(1L);
     }
@@ -101,7 +103,8 @@ class UserProfileControllerTest {
     void shouldUpdateProfileSuccessfully() throws Exception {
         // given
         setAuthentication(1L);
-        UpdateProfileRequest request = new UpdateProfileRequest(32, new BigDecimal("78.0"), "Advanced");
+        UpdateProfileRequest request =
+                new UpdateProfileRequest(32, new BigDecimal("78.0"), new BigDecimal("182.5"), "Advanced", 270, 190);
 
         // when / then
         mockMvc.perform(put("/api/v1/user/profile")
@@ -116,7 +119,8 @@ class UserProfileControllerTest {
     void shouldReturn400WhenUpdateProfileWithInvalidAge() throws Exception {
         // given
         setAuthentication(1L);
-        UpdateProfileRequest request = new UpdateProfileRequest(0, new BigDecimal("78.0"), "Advanced");
+        UpdateProfileRequest request =
+                new UpdateProfileRequest(0, new BigDecimal("78.0"), new BigDecimal("182.5"), "Advanced", 270, 190);
 
         // when / then
         mockMvc.perform(put("/api/v1/user/profile")
@@ -129,7 +133,8 @@ class UserProfileControllerTest {
     void shouldReturn400WhenUpdateProfileWithAgeTooHigh() throws Exception {
         // given
         setAuthentication(1L);
-        UpdateProfileRequest request = new UpdateProfileRequest(200, new BigDecimal("78.0"), "Advanced");
+        UpdateProfileRequest request =
+                new UpdateProfileRequest(200, new BigDecimal("78.0"), new BigDecimal("182.5"), "Advanced", 270, 190);
 
         // when / then
         mockMvc.perform(put("/api/v1/user/profile")
@@ -142,7 +147,8 @@ class UserProfileControllerTest {
     void shouldReturn400WhenUpdateProfileWithInvalidWeight() throws Exception {
         // given
         setAuthentication(1L);
-        UpdateProfileRequest request = new UpdateProfileRequest(32, new BigDecimal("0"), "Advanced");
+        UpdateProfileRequest request =
+                new UpdateProfileRequest(32, new BigDecimal("0"), new BigDecimal("182.5"), "Advanced", 270, 190);
 
         // when / then
         mockMvc.perform(put("/api/v1/user/profile")
@@ -155,7 +161,8 @@ class UserProfileControllerTest {
     void shouldReturn400WhenUpdateProfileWithWeightTooHigh() throws Exception {
         // given
         setAuthentication(1L);
-        UpdateProfileRequest request = new UpdateProfileRequest(32, new BigDecimal("600"), "Advanced");
+        UpdateProfileRequest request =
+                new UpdateProfileRequest(32, new BigDecimal("600"), new BigDecimal("182.5"), "Advanced", 270, 190);
 
         // when / then
         mockMvc.perform(put("/api/v1/user/profile")
@@ -168,7 +175,8 @@ class UserProfileControllerTest {
     void shouldReturn404WhenUpdateProfileForNonExistentUser() throws Exception {
         // given
         setAuthentication(99L);
-        UpdateProfileRequest request = new UpdateProfileRequest(32, new BigDecimal("78.0"), "Advanced");
+        UpdateProfileRequest request =
+                new UpdateProfileRequest(32, new BigDecimal("78.0"), new BigDecimal("182.5"), "Advanced", 270, 190);
         doThrow(new IllegalArgumentException("User profile not found for userId: 99"))
                 .when(userProfileService)
                 .updateProfile(99L, request);
@@ -184,7 +192,15 @@ class UserProfileControllerTest {
     void shouldSaveBackgroundSuccessfully() throws Exception {
         // given
         setAuthentication(1L);
-        BackgroundRequest request = new BackgroundRequest(5, 10, "None", "Tour de France 2020");
+        BackgroundRequest request = new BackgroundRequest(
+                5,
+                10,
+                "Trained for 3 months consistently",
+                "Sprained ankle last year",
+                "None",
+                "Tour de France 2020",
+                "Monday, Wednesday, Friday",
+                "6-8 AM");
 
         // when / then
         mockMvc.perform(post("/api/v1/user/background")
@@ -199,7 +215,8 @@ class UserProfileControllerTest {
     void shouldUpdateGoalsSuccessfully() throws Exception {
         // given
         setAuthentication(1L);
-        GoalsRequest request = new GoalsRequest("Complete a century ride");
+        GoalsRequest request =
+                new GoalsRequest("Complete a century ride", "Gran Fondo", LocalDateTime.of(2025, 6, 15, 0, 0));
 
         // when / then
         mockMvc.perform(put("/api/v1/user/goals")
@@ -214,7 +231,7 @@ class UserProfileControllerTest {
     void shouldReturn400WhenUpdateGoalsWithBlankGoals() throws Exception {
         // given
         setAuthentication(1L);
-        GoalsRequest request = new GoalsRequest("");
+        GoalsRequest request = new GoalsRequest("", null, null);
 
         // when / then
         mockMvc.perform(put("/api/v1/user/goals")
@@ -227,10 +244,72 @@ class UserProfileControllerTest {
     void shouldReturn400WhenUpdateGoalsWithNullGoals() throws Exception {
         // given
         setAuthentication(1L);
-        GoalsRequest request = new GoalsRequest(null);
+        GoalsRequest request = new GoalsRequest(null, null, null);
 
         // when / then
         mockMvc.perform(put("/api/v1/user/goals")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldSubmitQuestionnaireSuccessfully() throws Exception {
+        // given
+        setAuthentication(1L);
+        QuestionnaireRequest request = new QuestionnaireRequest(
+                30,
+                new BigDecimal("75.5"),
+                new BigDecimal("180.0"),
+                "Intermediate",
+                250,
+                185,
+                5,
+                10,
+                "Trained for 3 months consistently",
+                "Sprained ankle last year",
+                "None",
+                "Tour de France 2020",
+                "Monday, Wednesday, Friday",
+                "6-8 AM",
+                "Complete a century ride",
+                "Gran Fondo",
+                LocalDateTime.of(2025, 6, 15, 0, 0));
+
+        // when / then
+        mockMvc.perform(post("/api/v1/user/questionnaire")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated());
+
+        then(userProfileService).should().submitQuestionnaire(1L, request);
+    }
+
+    @Test
+    void shouldReturn400WhenQuestionnaireHasInvalidData() throws Exception {
+        // given
+        setAuthentication(1L);
+        QuestionnaireRequest request = new QuestionnaireRequest(
+                200, // Invalid age
+                new BigDecimal("75.5"),
+                new BigDecimal("180.0"),
+                "Intermediate",
+                250,
+                185,
+                5,
+                10,
+                "Trained for 3 months consistently",
+                "Sprained ankle last year",
+                "None",
+                "Tour de France 2020",
+                "Monday, Wednesday, Friday",
+                "6-8 AM",
+                "Complete a century ride",
+                "Gran Fondo",
+                LocalDateTime.of(2025, 6, 15, 0, 0));
+
+        // when / then
+        mockMvc.perform(post("/api/v1/user/questionnaire")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());

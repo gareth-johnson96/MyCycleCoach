@@ -9,10 +9,7 @@ import static org.mockito.BDDMockito.then;
 import com.mycyclecoach.feature.userprofile.domain.TrainingBackground;
 import com.mycyclecoach.feature.userprofile.domain.TrainingGoals;
 import com.mycyclecoach.feature.userprofile.domain.UserProfile;
-import com.mycyclecoach.feature.userprofile.dto.BackgroundRequest;
-import com.mycyclecoach.feature.userprofile.dto.GoalsRequest;
-import com.mycyclecoach.feature.userprofile.dto.ProfileResponse;
-import com.mycyclecoach.feature.userprofile.dto.UpdateProfileRequest;
+import com.mycyclecoach.feature.userprofile.dto.*;
 import com.mycyclecoach.feature.userprofile.repository.TrainingBackgroundRepository;
 import com.mycyclecoach.feature.userprofile.repository.TrainingGoalsRepository;
 import com.mycyclecoach.feature.userprofile.repository.UserProfileRepository;
@@ -49,7 +46,10 @@ class UserProfileServiceImplTest {
                 .userId(userId)
                 .age(30)
                 .weight(new BigDecimal("75.5"))
+                .height(new BigDecimal("180.0"))
                 .experienceLevel("Intermediate")
+                .currentFtp(250)
+                .maxHr(185)
                 .updatedAt(LocalDateTime.now())
                 .build();
 
@@ -64,7 +64,10 @@ class UserProfileServiceImplTest {
         assertThat(response.userId()).isEqualTo(userId);
         assertThat(response.age()).isEqualTo(30);
         assertThat(response.weight()).isEqualTo(new BigDecimal("75.5"));
+        assertThat(response.height()).isEqualTo(new BigDecimal("180.0"));
         assertThat(response.experienceLevel()).isEqualTo("Intermediate");
+        assertThat(response.currentFtp()).isEqualTo(250);
+        assertThat(response.maxHr()).isEqualTo(185);
 
         then(userProfileRepository).should().findByUserId(userId);
     }
@@ -87,13 +90,17 @@ class UserProfileServiceImplTest {
     void shouldUpdateProfileSuccessfully() {
         // given
         Long userId = 1L;
-        UpdateProfileRequest request = new UpdateProfileRequest(32, new BigDecimal("78.0"), "Advanced");
+        UpdateProfileRequest request =
+                new UpdateProfileRequest(32, new BigDecimal("78.0"), new BigDecimal("182.5"), "Advanced", 270, 190);
         UserProfile profile = UserProfile.builder()
                 .id(1L)
                 .userId(userId)
                 .age(30)
                 .weight(new BigDecimal("75.5"))
+                .height(new BigDecimal("180.0"))
                 .experienceLevel("Intermediate")
+                .currentFtp(250)
+                .maxHr(185)
                 .updatedAt(LocalDateTime.now())
                 .build();
 
@@ -108,14 +115,18 @@ class UserProfileServiceImplTest {
         then(userProfileRepository).should().save(profile);
         assertThat(profile.getAge()).isEqualTo(32);
         assertThat(profile.getWeight()).isEqualTo(new BigDecimal("78.0"));
+        assertThat(profile.getHeight()).isEqualTo(new BigDecimal("182.5"));
         assertThat(profile.getExperienceLevel()).isEqualTo("Advanced");
+        assertThat(profile.getCurrentFtp()).isEqualTo(270);
+        assertThat(profile.getMaxHr()).isEqualTo(190);
     }
 
     @Test
     void shouldThrowExceptionWhenUpdateProfileForNonExistentUser() {
         // given
         Long userId = 99L;
-        UpdateProfileRequest request = new UpdateProfileRequest(32, new BigDecimal("78.0"), "Advanced");
+        UpdateProfileRequest request =
+                new UpdateProfileRequest(32, new BigDecimal("78.0"), new BigDecimal("182.5"), "Advanced", 270, 190);
         given(userProfileRepository.findByUserId(userId)).willReturn(Optional.empty());
 
         // when / then
@@ -130,7 +141,15 @@ class UserProfileServiceImplTest {
     void shouldSaveBackgroundForNewUser() {
         // given
         Long userId = 1L;
-        BackgroundRequest request = new BackgroundRequest(5, 10, "None", "Tour de France 2020");
+        BackgroundRequest request = new BackgroundRequest(
+                5,
+                10,
+                "Trained for 3 months consistently",
+                "Sprained ankle last year",
+                "None",
+                "Tour de France 2020",
+                "Monday, Wednesday, Friday",
+                "6-8 AM");
         TrainingBackground background =
                 TrainingBackground.builder().userId(userId).build();
 
@@ -149,14 +168,26 @@ class UserProfileServiceImplTest {
     void shouldUpdateBackgroundForExistingUser() {
         // given
         Long userId = 1L;
-        BackgroundRequest request = new BackgroundRequest(7, 15, "Knee injury", "Multiple races");
+        BackgroundRequest request = new BackgroundRequest(
+                7,
+                15,
+                "Consistent training for past 6 months",
+                "Knee surgery 2 years ago",
+                "Knee injury",
+                "Multiple races",
+                "Tuesday, Thursday, Saturday",
+                "7-9 AM");
         TrainingBackground existingBackground = TrainingBackground.builder()
                 .id(1L)
                 .userId(userId)
                 .yearsTraining(5)
                 .weeklyVolume(10)
+                .trainingHistory("Trained for 3 months consistently")
+                .injuryHistory("Sprained ankle last year")
                 .recentInjuries("None")
                 .priorEvents("Tour de France 2020")
+                .dailyAvailability("Monday, Wednesday, Friday")
+                .weeklyTrainingTimes("6-8 AM")
                 .updatedAt(LocalDateTime.now())
                 .build();
 
@@ -171,15 +202,20 @@ class UserProfileServiceImplTest {
         then(trainingBackgroundRepository).should().save(existingBackground);
         assertThat(existingBackground.getYearsTraining()).isEqualTo(7);
         assertThat(existingBackground.getWeeklyVolume()).isEqualTo(15);
+        assertThat(existingBackground.getTrainingHistory()).isEqualTo("Consistent training for past 6 months");
+        assertThat(existingBackground.getInjuryHistory()).isEqualTo("Knee surgery 2 years ago");
         assertThat(existingBackground.getRecentInjuries()).isEqualTo("Knee injury");
         assertThat(existingBackground.getPriorEvents()).isEqualTo("Multiple races");
+        assertThat(existingBackground.getDailyAvailability()).isEqualTo("Tuesday, Thursday, Saturday");
+        assertThat(existingBackground.getWeeklyTrainingTimes()).isEqualTo("7-9 AM");
     }
 
     @Test
     void shouldUpdateGoalsForNewUser() {
         // given
         Long userId = 1L;
-        GoalsRequest request = new GoalsRequest("Complete a century ride");
+        GoalsRequest request =
+                new GoalsRequest("Complete a century ride", "Gran Fondo", LocalDateTime.of(2025, 6, 15, 0, 0));
         TrainingGoals goals = TrainingGoals.builder().userId(userId).build();
 
         given(trainingGoalsRepository.findByUserId(userId)).willReturn(Optional.empty());
@@ -197,11 +233,14 @@ class UserProfileServiceImplTest {
     void shouldUpdateGoalsForExistingUser() {
         // given
         Long userId = 1L;
-        GoalsRequest request = new GoalsRequest("Improve FTP by 20 watts");
+        GoalsRequest request =
+                new GoalsRequest("Improve FTP by 20 watts", "Tour de France", LocalDateTime.of(2025, 7, 1, 0, 0));
         TrainingGoals existingGoals = TrainingGoals.builder()
                 .id(1L)
                 .userId(userId)
                 .goals("Complete a century ride")
+                .targetEvent("Gran Fondo")
+                .targetEventDate(LocalDateTime.of(2025, 6, 15, 0, 0))
                 .updatedAt(LocalDateTime.now())
                 .build();
 
@@ -215,5 +254,117 @@ class UserProfileServiceImplTest {
         then(trainingGoalsRepository).should().findByUserId(userId);
         then(trainingGoalsRepository).should().save(existingGoals);
         assertThat(existingGoals.getGoals()).isEqualTo("Improve FTP by 20 watts");
+        assertThat(existingGoals.getTargetEvent()).isEqualTo("Tour de France");
+        assertThat(existingGoals.getTargetEventDate()).isEqualTo(LocalDateTime.of(2025, 7, 1, 0, 0));
+    }
+
+    @Test
+    void shouldSubmitQuestionnaireSuccessfully() {
+        // given
+        Long userId = 1L;
+        QuestionnaireRequest request = new QuestionnaireRequest(
+                30,
+                new BigDecimal("75.5"),
+                new BigDecimal("180.0"),
+                "Intermediate",
+                250,
+                185,
+                5,
+                10,
+                "Trained for 3 months consistently",
+                "Sprained ankle last year",
+                "None",
+                "Tour de France 2020",
+                "Monday, Wednesday, Friday",
+                "6-8 AM",
+                "Complete a century ride",
+                "Gran Fondo",
+                LocalDateTime.of(2025, 6, 15, 0, 0));
+
+        given(userProfileRepository.findByUserId(userId)).willReturn(Optional.empty());
+        given(trainingBackgroundRepository.findByUserId(userId)).willReturn(Optional.empty());
+        given(trainingGoalsRepository.findByUserId(userId)).willReturn(Optional.empty());
+        given(userProfileRepository.save(any(UserProfile.class))).willReturn(null);
+        given(trainingBackgroundRepository.save(any(TrainingBackground.class))).willReturn(null);
+        given(trainingGoalsRepository.save(any(TrainingGoals.class))).willReturn(null);
+
+        // when
+        userProfileService.submitQuestionnaire(userId, request);
+
+        // then
+        then(userProfileRepository).should().findByUserId(userId);
+        then(userProfileRepository).should().save(any(UserProfile.class));
+        then(trainingBackgroundRepository).should().findByUserId(userId);
+        then(trainingBackgroundRepository).should().save(any(TrainingBackground.class));
+        then(trainingGoalsRepository).should().findByUserId(userId);
+        then(trainingGoalsRepository).should().save(any(TrainingGoals.class));
+    }
+
+    @Test
+    void shouldGetBackgroundSuccessfully() {
+        // given
+        Long userId = 1L;
+        TrainingBackground background = TrainingBackground.builder()
+                .id(1L)
+                .userId(userId)
+                .yearsTraining(5)
+                .weeklyVolume(10)
+                .trainingHistory("Trained for 3 months consistently")
+                .injuryHistory("Sprained ankle last year")
+                .recentInjuries("None")
+                .priorEvents("Tour de France 2020")
+                .dailyAvailability("Monday, Wednesday, Friday")
+                .weeklyTrainingTimes("6-8 AM")
+                .updatedAt(LocalDateTime.now())
+                .build();
+
+        given(trainingBackgroundRepository.findByUserId(userId)).willReturn(Optional.of(background));
+
+        // when
+        BackgroundResponse response = userProfileService.getBackground(userId);
+
+        // then
+        assertThat(response).isNotNull();
+        assertThat(response.id()).isEqualTo(1L);
+        assertThat(response.userId()).isEqualTo(userId);
+        assertThat(response.yearsTraining()).isEqualTo(5);
+        assertThat(response.weeklyVolume()).isEqualTo(10);
+        assertThat(response.trainingHistory()).isEqualTo("Trained for 3 months consistently");
+        assertThat(response.injuryHistory()).isEqualTo("Sprained ankle last year");
+        assertThat(response.recentInjuries()).isEqualTo("None");
+        assertThat(response.priorEvents()).isEqualTo("Tour de France 2020");
+        assertThat(response.dailyAvailability()).isEqualTo("Monday, Wednesday, Friday");
+        assertThat(response.weeklyTrainingTimes()).isEqualTo("6-8 AM");
+
+        then(trainingBackgroundRepository).should().findByUserId(userId);
+    }
+
+    @Test
+    void shouldGetGoalsSuccessfully() {
+        // given
+        Long userId = 1L;
+        TrainingGoals goals = TrainingGoals.builder()
+                .id(1L)
+                .userId(userId)
+                .goals("Complete a century ride")
+                .targetEvent("Gran Fondo")
+                .targetEventDate(LocalDateTime.of(2025, 6, 15, 0, 0))
+                .updatedAt(LocalDateTime.now())
+                .build();
+
+        given(trainingGoalsRepository.findByUserId(userId)).willReturn(Optional.of(goals));
+
+        // when
+        GoalsResponse response = userProfileService.getGoals(userId);
+
+        // then
+        assertThat(response).isNotNull();
+        assertThat(response.id()).isEqualTo(1L);
+        assertThat(response.userId()).isEqualTo(userId);
+        assertThat(response.goals()).isEqualTo("Complete a century ride");
+        assertThat(response.targetEvent()).isEqualTo("Gran Fondo");
+        assertThat(response.targetEventDate()).isEqualTo(LocalDateTime.of(2025, 6, 15, 0, 0));
+
+        then(trainingGoalsRepository).should().findByUserId(userId);
     }
 }

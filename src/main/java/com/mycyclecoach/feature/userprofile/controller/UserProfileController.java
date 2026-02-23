@@ -1,9 +1,6 @@
 package com.mycyclecoach.feature.userprofile.controller;
 
-import com.mycyclecoach.feature.userprofile.dto.BackgroundRequest;
-import com.mycyclecoach.feature.userprofile.dto.GoalsRequest;
-import com.mycyclecoach.feature.userprofile.dto.ProfileResponse;
-import com.mycyclecoach.feature.userprofile.dto.UpdateProfileRequest;
+import com.mycyclecoach.feature.userprofile.dto.*;
 import com.mycyclecoach.feature.userprofile.service.UserProfileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -11,6 +8,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -39,6 +37,50 @@ public class UserProfileController {
         Long userId = getCurrentUserId();
         ProfileResponse profile = userProfileService.getProfile(userId);
         return ResponseEntity.ok(profile);
+    }
+
+    @GetMapping("/background")
+    @Operation(summary = "Get training background", description = "Retrieve the current user's training background")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Background retrieved successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "404", description = "Background not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<BackgroundResponse> getBackground() {
+        Long userId = getCurrentUserId();
+        BackgroundResponse background = userProfileService.getBackground(userId);
+        return ResponseEntity.ok(background);
+    }
+
+    @GetMapping("/goals")
+    @Operation(summary = "Get training goals", description = "Retrieve the current user's training goals")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Goals retrieved successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "404", description = "Goals not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<GoalsResponse> getGoals() {
+        Long userId = getCurrentUserId();
+        GoalsResponse goals = userProfileService.getGoals(userId);
+        return ResponseEntity.ok(goals);
+    }
+
+    @GetMapping("/complete-profile")
+    @Operation(
+            summary = "Get complete profile",
+            description = "Retrieve the current user's complete profile including background and goals")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Complete profile retrieved successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "404", description = "Profile data not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<CompleteProfileResponse> getCompleteProfile() {
+        Long userId = getCurrentUserId();
+        CompleteProfileResponse completeProfile = userProfileService.getCompleteProfile(userId);
+        return ResponseEntity.ok(completeProfile);
     }
 
     @PutMapping("/profile")
@@ -84,5 +126,24 @@ public class UserProfileController {
         Long userId = getCurrentUserId();
         userProfileService.updateGoals(userId, request);
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/questionnaire")
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(
+            summary = "Submit user questionnaire",
+            description =
+                    "Submit a comprehensive questionnaire upon account creation that populates the user's profile,"
+                            + " training background, and goals")
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "Questionnaire submitted successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid input"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<Void> submitQuestionnaire(@Valid @RequestBody QuestionnaireRequest request) {
+        Long userId = getCurrentUserId();
+        userProfileService.submitQuestionnaire(userId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 }

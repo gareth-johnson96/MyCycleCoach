@@ -31,6 +31,18 @@ public class TrainingBackground {
     @Column(name = "prior_events")
     private String priorEvents;
 
+    @Column(name = "training_history")
+    private String trainingHistory;
+
+    @Column(name = "injury_history")
+    private String injuryHistory;
+
+    @Column(name = "daily_availability")
+    private String dailyAvailability;
+
+    @Column(name = "weekly_training_times")
+    private String weeklyTrainingTimes;
+
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
