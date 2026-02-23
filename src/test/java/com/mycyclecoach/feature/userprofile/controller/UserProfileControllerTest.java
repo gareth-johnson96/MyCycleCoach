@@ -96,7 +96,7 @@ class UserProfileControllerTest {
 
         // when / then
         mockMvc.perform(get("/api/v1/user/profile").contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isInternalServerError());
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -185,7 +185,7 @@ class UserProfileControllerTest {
         mockMvc.perform(put("/api/v1/user/profile")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isInternalServerError());
+                .andExpect(status().isBadRequest());
     }
 
     @Test
