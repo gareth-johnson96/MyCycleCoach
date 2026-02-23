@@ -1,6 +1,22 @@
 spring:
   application:
     name: mycyclecoach
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/mycyclecoach}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
 
 server:
   port: 8080
@@ -10,3 +26,9 @@ management:
     web:
       exposure:
         include: health
+
+mycyclecoach:
+  jwt:
+    secret: ${JWT_SECRET:MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCy5z5J7K8N2vP8}
+    access-token-ttl: 900000
+    refresh-token-ttl: 604800000
