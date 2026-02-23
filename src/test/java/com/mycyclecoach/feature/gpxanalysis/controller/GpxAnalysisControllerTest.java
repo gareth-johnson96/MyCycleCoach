@@ -54,8 +54,8 @@ class GpxAnalysisControllerTest {
                 new MockMultipartFile("file", "test.gpx", "application/gpx+xml", "gpx content".getBytes());
 
         ClimbResponse climbResponse = new ClimbResponse(1L, 200.0, 40.0, 0.2, 0, 10);
-        GpxAnalysisResponse response = new GpxAnalysisResponse(
-                1L, "test.gpx", 1, List.of(climbResponse), 1.5, 5.0, LocalDateTime.now());
+        GpxAnalysisResponse response =
+                new GpxAnalysisResponse(1L, "test.gpx", 1, List.of(climbResponse), 1.5, 5.0, LocalDateTime.now());
 
         given(gpxAnalysisService.analyzeGpxFile(any(), eq(100L))).willReturn(response);
 
@@ -73,8 +73,8 @@ class GpxAnalysisControllerTest {
     void shouldReturn200WhenGettingGpxAnalysisByIdSuccessfully() throws Exception {
         // given
         ClimbResponse climbResponse = new ClimbResponse(1L, 200.0, 40.0, 0.2, 0, 10);
-        GpxAnalysisResponse response = new GpxAnalysisResponse(
-                1L, "test.gpx", 1, List.of(climbResponse), 1.5, 5.0, LocalDateTime.now());
+        GpxAnalysisResponse response =
+                new GpxAnalysisResponse(1L, "test.gpx", 1, List.of(climbResponse), 1.5, 5.0, LocalDateTime.now());
 
         given(gpxAnalysisService.getGpxAnalysis(1L)).willReturn(response);
 
@@ -91,8 +91,8 @@ class GpxAnalysisControllerTest {
         // given
         String filename = "test_ride.gpx";
         ClimbResponse climbResponse = new ClimbResponse(1L, 200.0, 40.0, 0.2, 0, 10);
-        GpxAnalysisResponse response = new GpxAnalysisResponse(
-                1L, filename, 1, List.of(climbResponse), 10.5, 28.3, LocalDateTime.now());
+        GpxAnalysisResponse response =
+                new GpxAnalysisResponse(1L, filename, 1, List.of(climbResponse), 10.5, 28.3, LocalDateTime.now());
 
         given(gpxAnalysisService.analyzeByFilename(filename)).willReturn(response);
 

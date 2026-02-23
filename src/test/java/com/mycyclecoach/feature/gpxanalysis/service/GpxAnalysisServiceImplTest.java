@@ -204,13 +204,7 @@ class GpxAnalysisServiceImplTest {
                 .build();
 
         GpxAnalysisResponse expectedResponse = new GpxAnalysisResponse(
-                1L,
-                filename,
-                1,
-                List.of(new ClimbResponse(1L, 200.0, 40.0, 0.2, 0, 2)),
-                1.5,
-                5.0,
-                LocalDateTime.now());
+                1L, filename, 1, List.of(new ClimbResponse(1L, 200.0, 40.0, 0.2, 0, 2)), 1.5, 5.0, LocalDateTime.now());
 
         given(gpxFileRepository.findByFilename(filename)).willReturn(Optional.of(gpxFile));
         given(climbRepository.findByGpxFileId(1L)).willReturn(List.of(climb));
