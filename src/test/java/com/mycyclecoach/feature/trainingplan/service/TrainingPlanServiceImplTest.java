@@ -424,4 +424,235 @@ class TrainingPlanServiceImplTest {
         then(trainingPlanRepository).should().findById(planId);
         then(plannedSessionRepository).should(never()).save(any(PlannedSession.class));
     }
+
+    @Test
+    void shouldGetPlanWithSessionsFilteredByDateRange() {
+        // given
+        Long userId = 1L;
+        Long planId = 1L;
+        LocalDate fromDate = LocalDate.now();
+        LocalDate toDate = fromDate.plusDays(10);
+
+        TrainingPlan activePlan = TrainingPlan.builder()
+                .id(planId)
+                .userId(userId)
+                .startDate(fromDate)
+                .endDate(toDate.plusWeeks(12))
+                .goal("General Fitness")
+                .status("ACTIVE")
+                .generatedAt(LocalDateTime.now())
+                .build();
+
+        PlannedSession completedSession = PlannedSession.builder()
+                .id(1L)
+                .planId(planId)
+                .scheduledDate(fromDate.plusDays(1))
+                .type("EASY")
+                .distance(BigDecimal.valueOf(10))
+                .duration(60)
+                .intensity("LOW")
+                .tss(50)
+                .elevation(100)
+                .targetZone("ZONE2")
+                .status("COMPLETED")
+                .build();
+
+        PlannedSession scheduledSession = PlannedSession.builder()
+                .id(2L)
+                .planId(planId)
+                .scheduledDate(fromDate.plusDays(3))
+                .type("TEMPO")
+                .distance(BigDecimal.valueOf(15))
+                .duration(75)
+                .intensity("MEDIUM")
+                .tss(75)
+                .elevation(200)
+                .targetZone("ZONE3")
+                .status("SCHEDULED")
+                .build();
+
+        given(trainingPlanRepository.findAll()).willReturn(List.of(activePlan));
+        given(plannedSessionRepository.findByPlanIdAndScheduledDateBetween(planId, fromDate, toDate))
+                .willReturn(List.of(completedSession, scheduledSession));
+
+        // when
+        var response = trainingPlanService.getPlanWithSessions(userId, fromDate, toDate);
+
+        // then
+        assertThat(response).isNotNull();
+        assertThat(response.id()).isEqualTo(planId);
+        assertThat(response.userId()).isEqualTo(userId);
+        assertThat(response.completedSessions()).hasSize(1);
+        assertThat(response.trainingPlan()).hasSize(1);
+        assertThat(response.completedSessions().get(0).status()).isEqualTo("COMPLETED");
+        assertThat(response.trainingPlan().get(0).status()).isEqualTo("SCHEDULED");
+    }
+
+    @Test
+    void shouldGenerateSessionsForDateRange() {
+        // given
+        Long userId = 1L;
+        Long planId = 1L;
+        LocalDate fromDate = LocalDate.now();
+        LocalDate toDate = fromDate.plusDays(4);
+
+        TrainingPlan activePlan = TrainingPlan.builder()
+                .id(planId)
+                .userId(userId)
+                .startDate(fromDate)
+                .endDate(toDate.plusWeeks(12))
+                .goal("General Fitness")
+                .status("ACTIVE")
+                .generatedAt(LocalDateTime.now())
+                .build();
+
+        given(trainingPlanRepository.findAll()).willReturn(List.of(activePlan));
+        given(plannedSessionRepository.save(any(PlannedSession.class)))
+                .willAnswer(invocation -> invocation.getArgument(0));
+
+        // when
+        var response = trainingPlanService.generateSessionsForDateRange(userId, fromDate, toDate);
+
+        // then
+        assertThat(response).isNotNull();
+        assertThat(response.size()).isGreaterThan(0);
+        then(plannedSessionRepository).should(times(response.size())).save(any(PlannedSession.class));
+    }
+
+    @Test
+    void shouldGenerateSessionForSingleDate() {
+        // given
+        Long userId = 1L;
+        Long planId = 1L;
+        LocalDate date = LocalDate.now();
+
+        TrainingPlan activePlan = TrainingPlan.builder()
+                .id(planId)
+                .userId(userId)
+                .startDate(date)
+                .endDate(date.plusWeeks(12))
+                .goal("General Fitness")
+                .status("ACTIVE")
+                .generatedAt(LocalDateTime.now())
+                .build();
+
+        given(trainingPlanRepository.findAll()).willReturn(List.of(activePlan));
+        given(plannedSessionRepository.save(any(PlannedSession.class)))
+                .willAnswer(invocation -> invocation.getArgument(0));
+
+        // when
+        var response = trainingPlanService.generateSessionForDate(userId, date);
+
+        // then
+        assertThat(response).isNotNull();
+        assertThat(response.scheduledDate()).isEqualTo(date);
+        then(plannedSessionRepository).should().save(any(PlannedSession.class));
+    }
+
+    @Test
+    void shouldGenerateAlternateSession() {
+        // given
+        Long sessionId = 1L;
+        Long userId = 1L;
+        Long planId = 1L;
+
+        PlannedSession originalSession = PlannedSession.builder()
+                .id(sessionId)
+                .planId(planId)
+                .scheduledDate(LocalDate.now())
+                .type("EASY")
+                .distance(BigDecimal.valueOf(10))
+                .duration(60)
+                .intensity("LOW")
+                .tss(50)
+                .elevation(100)
+                .targetZone("ZONE2")
+                .status("SCHEDULED")
+                .build();
+
+        TrainingPlan plan = TrainingPlan.builder()
+                .id(planId)
+                .userId(userId)
+                .startDate(LocalDate.now())
+                .endDate(LocalDate.now().plusWeeks(12))
+                .goal("General Fitness")
+                .status("ACTIVE")
+                .generatedAt(LocalDateTime.now())
+                .build();
+
+        given(plannedSessionRepository.findById(sessionId)).willReturn(Optional.of(originalSession));
+        given(trainingPlanRepository.findById(planId)).willReturn(Optional.of(plan));
+        given(plannedSessionRepository.save(any(PlannedSession.class)))
+                .willAnswer(invocation -> invocation.getArgument(0));
+
+        // when
+        var response = trainingPlanService.generateAlternateSession(sessionId, userId);
+
+        // then
+        assertThat(response).isNotNull();
+        assertThat(response.type()).isNotEqualTo("EASY");
+        assertThat(response.type()).isEqualTo("RECOVERY");
+        then(plannedSessionRepository).should().findById(sessionId);
+        then(trainingPlanRepository).should().findById(planId);
+        then(plannedSessionRepository).should().save(any(PlannedSession.class));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenGeneratingAlternateForNonExistentSession() {
+        // given
+        Long sessionId = 999L;
+        Long userId = 1L;
+
+        given(plannedSessionRepository.findById(sessionId)).willReturn(Optional.empty());
+
+        // when / then
+        assertThatThrownBy(() -> trainingPlanService.generateAlternateSession(sessionId, userId))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Session not found with id: " + sessionId);
+
+        then(plannedSessionRepository).should().findById(sessionId);
+        then(trainingPlanRepository).should(never()).findById(anyLong());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenUnauthorizedUserTriesToGenerateAlternate() {
+        // given
+        Long sessionId = 1L;
+        Long userId = 1L;
+        Long otherUserId = 2L;
+        Long planId = 1L;
+
+        PlannedSession originalSession = PlannedSession.builder()
+                .id(sessionId)
+                .planId(planId)
+                .scheduledDate(LocalDate.now())
+                .type("EASY")
+                .distance(BigDecimal.valueOf(10))
+                .duration(60)
+                .intensity("LOW")
+                .status("SCHEDULED")
+                .build();
+
+        TrainingPlan plan = TrainingPlan.builder()
+                .id(planId)
+                .userId(otherUserId)
+                .startDate(LocalDate.now())
+                .endDate(LocalDate.now().plusWeeks(12))
+                .goal("General Fitness")
+                .status("ACTIVE")
+                .generatedAt(LocalDateTime.now())
+                .build();
+
+        given(plannedSessionRepository.findById(sessionId)).willReturn(Optional.of(originalSession));
+        given(trainingPlanRepository.findById(planId)).willReturn(Optional.of(plan));
+
+        // when / then
+        assertThatThrownBy(() -> trainingPlanService.generateAlternateSession(sessionId, userId))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Unauthorized access to session: " + sessionId);
+
+        then(plannedSessionRepository).should().findById(sessionId);
+        then(trainingPlanRepository).should().findById(planId);
+        then(plannedSessionRepository).should(never()).save(any(PlannedSession.class));
+    }
 }
