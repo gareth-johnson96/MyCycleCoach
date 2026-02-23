@@ -55,7 +55,7 @@ class GpxAnalysisControllerTest {
 
         ClimbResponse climbResponse = new ClimbResponse(1L, 200.0, 40.0, 0.2, 0, 10);
         GpxAnalysisResponse response =
-                new GpxAnalysisResponse(1L, "test.gpx", 1, List.of(climbResponse), LocalDateTime.now());
+                new GpxAnalysisResponse(1L, "test.gpx", 1, List.of(climbResponse), 1.5, 5.0, LocalDateTime.now());
 
         given(gpxAnalysisService.analyzeGpxFile(any(), eq(100L))).willReturn(response);
 
@@ -74,7 +74,7 @@ class GpxAnalysisControllerTest {
         // given
         ClimbResponse climbResponse = new ClimbResponse(1L, 200.0, 40.0, 0.2, 0, 10);
         GpxAnalysisResponse response =
-                new GpxAnalysisResponse(1L, "test.gpx", 1, List.of(climbResponse), LocalDateTime.now());
+                new GpxAnalysisResponse(1L, "test.gpx", 1, List.of(climbResponse), 1.5, 5.0, LocalDateTime.now());
 
         given(gpxAnalysisService.getGpxAnalysis(1L)).willReturn(response);
 
@@ -84,5 +84,25 @@ class GpxAnalysisControllerTest {
                 .andExpect(jsonPath("$.gpxFileId").value(1L))
                 .andExpect(jsonPath("$.filename").value("test.gpx"))
                 .andExpect(jsonPath("$.climbCount").value(1));
+    }
+
+    @Test
+    void shouldReturn200WhenAnalyzingGpxByFilenameSuccessfully() throws Exception {
+        // given
+        String filename = "test_ride.gpx";
+        ClimbResponse climbResponse = new ClimbResponse(1L, 200.0, 40.0, 0.2, 0, 10);
+        GpxAnalysisResponse response =
+                new GpxAnalysisResponse(1L, filename, 1, List.of(climbResponse), 10.5, 28.3, LocalDateTime.now());
+
+        given(gpxAnalysisService.analyzeByFilename(filename)).willReturn(response);
+
+        // when / then
+        mockMvc.perform(get("/api/v1/gpx/analyze/" + filename))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.gpxFileId").value(1L))
+                .andExpect(jsonPath("$.filename").value(filename))
+                .andExpect(jsonPath("$.climbCount").value(1))
+                .andExpect(jsonPath("$.totalDistanceKm").value(10.5))
+                .andExpect(jsonPath("$.estimatedRideTimeMinutes").value(28.3));
     }
 }

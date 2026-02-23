@@ -8,4 +8,6 @@ public interface GpxAnalysisService {
     GpxAnalysisResponse analyzeGpxFile(MultipartFile file, Long userId);
 
     GpxAnalysisResponse getGpxAnalysis(Long gpxFileId);
+
+    GpxAnalysisResponse analyzeByFilename(String filename);
 }

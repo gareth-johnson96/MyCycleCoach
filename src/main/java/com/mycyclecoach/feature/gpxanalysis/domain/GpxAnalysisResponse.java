@@ -4,4 +4,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public record GpxAnalysisResponse(
-        Long gpxFileId, String filename, Integer climbCount, List<ClimbResponse> climbs, LocalDateTime uploadedAt) {}
+        Long gpxFileId,
+        String filename,
+        Integer climbCount,
+        List<ClimbResponse> climbs,
+        Double totalDistanceKm,
+        Double estimatedRideTimeMinutes,
+        LocalDateTime uploadedAt) {}

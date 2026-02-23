@@ -77,7 +77,13 @@ class GpxAnalysisServiceImplTest {
                 .build();
 
         GpxAnalysisResponse expectedResponse = new GpxAnalysisResponse(
-                1L, "test.gpx", 1, List.of(new ClimbResponse(1L, 200.0, 40.0, 0.2, 0, 2)), LocalDateTime.now());
+                1L,
+                "test.gpx",
+                1,
+                List.of(new ClimbResponse(1L, 200.0, 40.0, 0.2, 0, 2)),
+                1.5,
+                5.0,
+                LocalDateTime.now());
 
         given(gpxFileRepository.save(any(GpxFile.class))).willReturn(savedGpxFile);
         given(climbRepository.saveAll(anyList())).willReturn(List.of(climb));
@@ -141,7 +147,13 @@ class GpxAnalysisServiceImplTest {
                 .build();
 
         GpxAnalysisResponse expectedResponse = new GpxAnalysisResponse(
-                1L, "test.gpx", 1, List.of(new ClimbResponse(1L, 200.0, 40.0, 0.2, 0, 2)), LocalDateTime.now());
+                1L,
+                "test.gpx",
+                1,
+                List.of(new ClimbResponse(1L, 200.0, 40.0, 0.2, 0, 2)),
+                1.5,
+                5.0,
+                LocalDateTime.now());
 
         given(gpxFileRepository.findById(1L)).willReturn(Optional.of(gpxFile));
         given(climbRepository.findByGpxFileId(1L)).willReturn(List.of(climb));
@@ -166,5 +178,58 @@ class GpxAnalysisServiceImplTest {
         assertThatThrownBy(() -> gpxAnalysisService.getGpxAnalysis(99L))
                 .isInstanceOf(GpxFileNotFoundException.class)
                 .hasMessageContaining("99");
+    }
+
+    @Test
+    void shouldAnalyzeByFilenameSuccessfully() {
+        // given
+        String filename = "test_ride.gpx";
+        GpxFile gpxFile = GpxFile.builder()
+                .id(1L)
+                .filename(filename)
+                .content("content")
+                .userId(100L)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+
+        Climb climb = Climb.builder()
+                .id(1L)
+                .gpxFile(gpxFile)
+                .distanceMeters(200.0)
+                .elevationGainMeters(40.0)
+                .averageGradient(0.2)
+                .startPointIndex(0)
+                .endPointIndex(2)
+                .build();
+
+        GpxAnalysisResponse expectedResponse = new GpxAnalysisResponse(
+                1L, filename, 1, List.of(new ClimbResponse(1L, 200.0, 40.0, 0.2, 0, 2)), 1.5, 5.0, LocalDateTime.now());
+
+        given(gpxFileRepository.findByFilename(filename)).willReturn(Optional.of(gpxFile));
+        given(climbRepository.findByGpxFileId(1L)).willReturn(List.of(climb));
+        given(gpxAnalysisMapper.toGpxAnalysisResponse(gpxFile, List.of(climb))).willReturn(expectedResponse);
+
+        // when
+        GpxAnalysisResponse response = gpxAnalysisService.analyzeByFilename(filename);
+
+        // then
+        assertThat(response).isNotNull();
+        assertThat(response.gpxFileId()).isEqualTo(1L);
+        assertThat(response.filename()).isEqualTo(filename);
+        then(gpxFileRepository).should().findByFilename(filename);
+        then(climbRepository).should().findByGpxFileId(1L);
+    }
+
+    @Test
+    void shouldThrowGpxFileNotFoundExceptionWhenFilenameIsInvalid() {
+        // given
+        String filename = "nonexistent.gpx";
+        given(gpxFileRepository.findByFilename(filename)).willReturn(Optional.empty());
+
+        // when / then
+        assertThatThrownBy(() -> gpxAnalysisService.analyzeByFilename(filename))
+                .isInstanceOf(GpxFileNotFoundException.class)
+                .hasMessageContaining("GPX file not found with filename");
     }
 }
