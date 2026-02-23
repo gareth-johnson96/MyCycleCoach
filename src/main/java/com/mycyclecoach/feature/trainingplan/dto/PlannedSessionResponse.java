@@ -11,4 +11,7 @@ public record PlannedSessionResponse(
         BigDecimal distance,
         Integer duration,
         String intensity,
-        String status) {}
+        String status,
+        Integer tss,
+        Integer elevation,
+        String targetZone) {}
