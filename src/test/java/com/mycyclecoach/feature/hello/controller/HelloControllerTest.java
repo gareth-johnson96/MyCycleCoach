@@ -5,18 +5,21 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.mycyclecoach.config.SecurityConfig;
+import com.mycyclecoach.config.JwtConfig;
+import com.mycyclecoach.feature.auth.security.JwtAuthenticationFilter;
+import com.mycyclecoach.feature.auth.security.JwtTokenProvider;
 import com.mycyclecoach.feature.hello.domain.HelloResponse;
 import com.mycyclecoach.feature.hello.service.HelloService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.Import;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(HelloController.class)
-@Import(SecurityConfig.class)
+@AutoConfigureMockMvc(addFilters = false)
 class HelloControllerTest {
 
     @Autowired
@@ -24,6 +27,18 @@ class HelloControllerTest {
 
     @MockitoBean
     private HelloService helloService;
+
+    @MockitoBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @MockitoBean
+    private JwtTokenProvider jwtTokenProvider;
+
+    @MockitoBean
+    private JwtConfig jwtConfig;
+
+    @MockitoBean
+    private BCryptPasswordEncoder passwordEncoder;
 
     @Test
     void shouldReturn200WithHelloWorldMessageWhenEndpointCalled() throws Exception {
