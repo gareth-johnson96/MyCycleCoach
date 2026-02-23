@@ -3,6 +3,8 @@ package com.mycyclecoach.infrastructure;
 import com.mycyclecoach.feature.auth.exception.InvalidCredentialsException;
 import com.mycyclecoach.feature.auth.exception.TokenExpiredException;
 import com.mycyclecoach.feature.auth.exception.UserAlreadyExistsException;
+import com.mycyclecoach.feature.gpxanalysis.domain.GpxFileNotFoundException;
+import com.mycyclecoach.feature.gpxanalysis.domain.GpxParsingException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
@@ -53,6 +55,20 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleIllegalArgument(IllegalArgumentException ex, HttpServletRequest request) {
         log.warn("Invalid argument: {}", ex.getMessage());
+        return new ErrorResponse(400, "Bad Request", ex.getMessage(), request.getRequestURI(), LocalDateTime.now());
+    }
+
+    @ExceptionHandler(GpxFileNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleGpxFileNotFound(GpxFileNotFoundException ex, HttpServletRequest request) {
+        log.warn("GPX file not found: {}", ex.getMessage());
+        return new ErrorResponse(404, "Not Found", ex.getMessage(), request.getRequestURI(), LocalDateTime.now());
+    }
+
+    @ExceptionHandler(GpxParsingException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleGpxParsing(GpxParsingException ex, HttpServletRequest request) {
+        log.error("GPX parsing error: {}", ex.getMessage(), ex);
         return new ErrorResponse(400, "Bad Request", ex.getMessage(), request.getRequestURI(), LocalDateTime.now());
     }
 
