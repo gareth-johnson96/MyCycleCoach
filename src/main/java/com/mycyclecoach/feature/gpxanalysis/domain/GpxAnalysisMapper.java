@@ -16,6 +16,7 @@ public class GpxAnalysisMapper {
     private static final double CLIMB_BASE_SPEED_KMH = 15.0;
     private static final double STEEP_CLIMB_SPEED_KMH = 8.0;
     private static final double STEEP_GRADIENT_THRESHOLD = 0.06;
+    private static final double EARTH_RADIUS_METERS = 6371000.0;
 
     public ClimbResponse toClimbResponse(Climb climb) {
         return new ClimbResponse(
@@ -147,7 +148,6 @@ public class GpxAnalysisMapper {
 
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-        final double EARTH_RADIUS_METERS = 6371000;
         return EARTH_RADIUS_METERS * c;
     }
 }

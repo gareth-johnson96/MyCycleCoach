@@ -75,6 +75,8 @@ public class GpxAnalysisServiceImpl implements GpxAnalysisService {
     public GpxAnalysisResponse analyzeByFilename(String filename) {
         log.info("Analyzing GPX file by filename={}", filename);
 
+        // TODO: Add user authentication/authorization to ensure users can only access their own files
+        // Current implementation allows access to any uploaded file by filename
         GpxFile gpxFile = gpxFileRepository
                 .findByFilename(filename)
                 .orElseThrow(() -> new GpxFileNotFoundException("GPX file not found with filename: " + filename));
