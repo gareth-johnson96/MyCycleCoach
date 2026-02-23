@@ -1,0 +1,98 @@
+services:
+  # PostgreSQL 16 database
+  postgres:
+    image: postgres:16-alpine
+    container_name: mycyclecoach-postgres
+    environment:
+      POSTGRES_DB: ${DB_NAME:-mycyclecoach}
+      POSTGRES_USER: ${DB_USERNAME:-cyclecoach}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-localdev123}
+    ports:
+      - "5432:5432"
+    volumes:
+      - mycyclecoach_postgres_data:/var/lib/postgresql/data
+    networks:
+      - mycyclecoach
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-cyclecoach}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Apache Kafka for event streaming
+  kafka:
+    image: confluentinc/cp-kafka:7.7.0
+    container_name: mycyclecoach-kafka
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_LOG_RETENTION_HOURS: 24
+    ports:
+      - "9092:9092"
+    volumes:
+      - mycyclecoach_kafka_data:/var/lib/kafka/data
+    networks:
+      - mycyclecoach
+    depends_on:
+      postgres:
+        condition: service_healthy
+      zookeeper:
+        condition: service_started
+    restart: unless-stopped
+
+  # Zookeeper (required for Kafka)
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.7.0
+    container_name: mycyclecoach-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - mycyclecoach
+    restart: unless-stopped
+
+  # MyCycleCoach Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: mycyclecoach-app
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-mycyclecoach}
+      DB_USERNAME: ${DB_USERNAME:-cyclecoach}
+      DB_PASSWORD: ${DB_PASSWORD:-localdev123}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+    ports:
+      - "8080:8080"
+    networks:
+      - mycyclecoach
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      zookeeper:
+        condition: service_started
+    restart: unless-stopped
+
+volumes:
+  mycyclecoach_postgres_data:
+    driver: local
+  mycyclecoach_kafka_data:
+    driver: local
+
+networks:
+  mycyclecoach:
+    driver: bridge
