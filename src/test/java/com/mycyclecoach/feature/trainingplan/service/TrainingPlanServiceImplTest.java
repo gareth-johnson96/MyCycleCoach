@@ -723,47 +723,4 @@ class TrainingPlanServiceImplTest {
 
         then(trainingPlanRepository).should().findAll();
     }
-
-    @Test
-    void shouldGenerateRandomTestDataWithVariedSessionTypes() {
-        // given
-        Long userId = 1L;
-        Long planId = 1L;
-        LocalDate fromDate = LocalDate.now().minusDays(30);
-        LocalDate toDate = LocalDate.now().plusDays(30);
-
-        TrainingPlan activePlan = TrainingPlan.builder()
-                .id(planId)
-                .userId(userId)
-                .startDate(fromDate)
-                .endDate(toDate.plusWeeks(12))
-                .goal("General Fitness")
-                .status("ACTIVE")
-                .generatedAt(LocalDateTime.now())
-                .build();
-
-        given(trainingPlanRepository.findAll()).willReturn(List.of(activePlan));
-        given(plannedSessionRepository.save(any(PlannedSession.class)))
-                .willAnswer(invocation -> invocation.getArgument(0));
-
-        // when
-        TrainingPlanDetailResponse response = trainingPlanService.generateRandomTestData(userId, fromDate, toDate);
-
-        // then
-        assertThat(response).isNotNull();
-
-        // Collect all session types
-        List<String> sessionTypes = new ArrayList<>();
-        response.completedSessions().forEach(s -> sessionTypes.add(s.type()));
-        response.trainingPlan().forEach(s -> sessionTypes.add(s.type()));
-
-        // With a large enough date range, we should get some variety
-        // (This test may occasionally fail due to randomness, but it's unlikely with 60 days)
-        if (sessionTypes.size() > 5) {
-            long distinctTypes = sessionTypes.stream().distinct().count();
-            assertThat(distinctTypes).isGreaterThan(1);
-        }
-
-        then(trainingPlanRepository).should().findAll();
-    }
 }

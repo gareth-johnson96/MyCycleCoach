@@ -356,7 +356,7 @@ public class TrainingPlanServiceImpl implements TrainingPlanService {
         BigDecimal distance = BigDecimal.valueOf(5 + random.nextInt(95)); // 5-100 km
         Integer duration = 30 + random.nextInt(210); // 30-240 minutes
         Integer tss = 20 + random.nextInt(180); // 20-200 TSS
-        Integer elevation = 0 + random.nextInt(2000); // 0-2000 m
+        Integer elevation = random.nextInt(2000); // 0-2000 m
 
         return PlannedSession.builder()
                 .planId(planId)
