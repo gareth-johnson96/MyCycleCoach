@@ -61,7 +61,11 @@ class AuthServiceImplTest {
         // given
         RegisterRequest request = new RegisterRequest("test@example.com", "password123");
         String encodedPassword = "encoded-password";
-        User user = User.builder().id(1L).email(request.email()).passwordHash(encodedPassword).build();
+        User user = User.builder()
+                .id(1L)
+                .email(request.email())
+                .passwordHash(encodedPassword)
+                .build();
 
         given(userRepository.existsByEmail(request.email())).willReturn(false);
         given(passwordEncoder.encode(request.password())).willReturn(encodedPassword);
@@ -109,7 +113,8 @@ class AuthServiceImplTest {
         Long accessTtl = 3600000L;
 
         given(userRepository.findByEmail(request.email())).willReturn(Optional.of(user));
-        given(passwordEncoder.matches(request.password(), user.getPasswordHash())).willReturn(true);
+        given(passwordEncoder.matches(request.password(), user.getPasswordHash()))
+                .willReturn(true);
         given(jwtTokenProvider.generateAccessToken(user.getId())).willReturn(accessToken);
         given(jwtTokenProvider.generateRefreshToken(user.getId())).willReturn(refreshToken);
         given(jwtConfig.getAccessTokenTtl()).willReturn(accessTtl);
@@ -158,7 +163,8 @@ class AuthServiceImplTest {
                 .passwordHash("$2a$10$hashedpassword")
                 .build();
         given(userRepository.findByEmail(request.email())).willReturn(Optional.of(user));
-        given(passwordEncoder.matches(request.password(), user.getPasswordHash())).willReturn(false);
+        given(passwordEncoder.matches(request.password(), user.getPasswordHash()))
+                .willReturn(false);
 
         // when / then
         assertThatThrownBy(() -> authService.authenticateUser(request))

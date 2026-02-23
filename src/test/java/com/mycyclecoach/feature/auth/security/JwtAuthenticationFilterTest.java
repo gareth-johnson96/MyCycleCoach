@@ -83,8 +83,7 @@ class JwtAuthenticationFilterTest {
     }
 
     @Test
-    void shouldNotAuthenticateWhenAuthorizationHeaderDoesNotStartWithBearer()
-            throws ServletException, IOException {
+    void shouldNotAuthenticateWhenAuthorizationHeaderDoesNotStartWithBearer() throws ServletException, IOException {
         // given
         String authHeader = "Basic some-credentials";
         given(request.getHeader(HttpHeaders.AUTHORIZATION)).willReturn(authHeader);

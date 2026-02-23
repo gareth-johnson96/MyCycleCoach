@@ -86,8 +86,7 @@ class GlobalExceptionHandlerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(
-                        jsonPath("$.message").value("User with email existing@example.com already exists"))
+                .andExpect(jsonPath("$.message").value("User with email existing@example.com already exists"))
                 .andExpect(jsonPath("$.path").value("/api/v1/auth/register"))
                 .andExpect(jsonPath("$.timestamp").exists());
     }
@@ -115,8 +114,7 @@ class GlobalExceptionHandlerTest {
     void shouldHandleTokenExpiredException() throws Exception {
         // given
         LoginRequest request = new LoginRequest("test@example.com", "password123");
-        given(authService.authenticateUser(request))
-                .willThrow(new TokenExpiredException("Token has expired"));
+        given(authService.authenticateUser(request)).willThrow(new TokenExpiredException("Token has expired"));
 
         // when / then
         mockMvc.perform(post("/api/v1/auth/login")
@@ -155,8 +153,8 @@ class GlobalExceptionHandlerTest {
 
         // when
         String response = mockMvc.perform(post("/api/v1/auth/register")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(request)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
                 .andReturn()
                 .getResponse()

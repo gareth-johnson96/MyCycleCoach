@@ -87,8 +87,7 @@ class UserProfileServiceImplTest {
     void shouldUpdateProfileSuccessfully() {
         // given
         Long userId = 1L;
-        UpdateProfileRequest request =
-                new UpdateProfileRequest(32, new BigDecimal("78.0"), "Advanced");
+        UpdateProfileRequest request = new UpdateProfileRequest(32, new BigDecimal("78.0"), "Advanced");
         UserProfile profile = UserProfile.builder()
                 .id(1L)
                 .userId(userId)
@@ -116,8 +115,7 @@ class UserProfileServiceImplTest {
     void shouldThrowExceptionWhenUpdateProfileForNonExistentUser() {
         // given
         Long userId = 99L;
-        UpdateProfileRequest request =
-                new UpdateProfileRequest(32, new BigDecimal("78.0"), "Advanced");
+        UpdateProfileRequest request = new UpdateProfileRequest(32, new BigDecimal("78.0"), "Advanced");
         given(userProfileRepository.findByUserId(userId)).willReturn(Optional.empty());
 
         // when / then
@@ -162,10 +160,8 @@ class UserProfileServiceImplTest {
                 .updatedAt(LocalDateTime.now())
                 .build();
 
-        given(trainingBackgroundRepository.findByUserId(userId))
-                .willReturn(Optional.of(existingBackground));
-        given(trainingBackgroundRepository.save(any(TrainingBackground.class)))
-                .willReturn(existingBackground);
+        given(trainingBackgroundRepository.findByUserId(userId)).willReturn(Optional.of(existingBackground));
+        given(trainingBackgroundRepository.save(any(TrainingBackground.class))).willReturn(existingBackground);
 
         // when
         userProfileService.saveBackground(userId, request);

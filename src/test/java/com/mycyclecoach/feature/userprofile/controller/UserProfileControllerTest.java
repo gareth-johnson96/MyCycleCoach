@@ -62,8 +62,7 @@ class UserProfileControllerTest {
     }
 
     private void setAuthentication(Long userId) {
-        UsernamePasswordAuthenticationToken auth =
-                new UsernamePasswordAuthenticationToken(userId, null);
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(userId, null);
         SecurityContextHolder.getContext().setAuthentication(auth);
     }
 
@@ -71,8 +70,7 @@ class UserProfileControllerTest {
     void shouldGetProfileSuccessfully() throws Exception {
         // given
         setAuthentication(1L);
-        ProfileResponse response =
-                new ProfileResponse(1L, 1L, 30, new BigDecimal("75.5"), "Intermediate");
+        ProfileResponse response = new ProfileResponse(1L, 1L, 30, new BigDecimal("75.5"), "Intermediate");
         given(userProfileService.getProfile(1L)).willReturn(response);
 
         // when / then
@@ -103,8 +101,7 @@ class UserProfileControllerTest {
     void shouldUpdateProfileSuccessfully() throws Exception {
         // given
         setAuthentication(1L);
-        UpdateProfileRequest request =
-                new UpdateProfileRequest(32, new BigDecimal("78.0"), "Advanced");
+        UpdateProfileRequest request = new UpdateProfileRequest(32, new BigDecimal("78.0"), "Advanced");
 
         // when / then
         mockMvc.perform(put("/api/v1/user/profile")
@@ -119,8 +116,7 @@ class UserProfileControllerTest {
     void shouldReturn400WhenUpdateProfileWithInvalidAge() throws Exception {
         // given
         setAuthentication(1L);
-        UpdateProfileRequest request =
-                new UpdateProfileRequest(0, new BigDecimal("78.0"), "Advanced");
+        UpdateProfileRequest request = new UpdateProfileRequest(0, new BigDecimal("78.0"), "Advanced");
 
         // when / then
         mockMvc.perform(put("/api/v1/user/profile")
@@ -133,8 +129,7 @@ class UserProfileControllerTest {
     void shouldReturn400WhenUpdateProfileWithAgeTooHigh() throws Exception {
         // given
         setAuthentication(1L);
-        UpdateProfileRequest request =
-                new UpdateProfileRequest(200, new BigDecimal("78.0"), "Advanced");
+        UpdateProfileRequest request = new UpdateProfileRequest(200, new BigDecimal("78.0"), "Advanced");
 
         // when / then
         mockMvc.perform(put("/api/v1/user/profile")
@@ -147,8 +142,7 @@ class UserProfileControllerTest {
     void shouldReturn400WhenUpdateProfileWithInvalidWeight() throws Exception {
         // given
         setAuthentication(1L);
-        UpdateProfileRequest request =
-                new UpdateProfileRequest(32, new BigDecimal("0"), "Advanced");
+        UpdateProfileRequest request = new UpdateProfileRequest(32, new BigDecimal("0"), "Advanced");
 
         // when / then
         mockMvc.perform(put("/api/v1/user/profile")
@@ -161,8 +155,7 @@ class UserProfileControllerTest {
     void shouldReturn400WhenUpdateProfileWithWeightTooHigh() throws Exception {
         // given
         setAuthentication(1L);
-        UpdateProfileRequest request =
-                new UpdateProfileRequest(32, new BigDecimal("600"), "Advanced");
+        UpdateProfileRequest request = new UpdateProfileRequest(32, new BigDecimal("600"), "Advanced");
 
         // when / then
         mockMvc.perform(put("/api/v1/user/profile")
@@ -175,8 +168,7 @@ class UserProfileControllerTest {
     void shouldReturn404WhenUpdateProfileForNonExistentUser() throws Exception {
         // given
         setAuthentication(99L);
-        UpdateProfileRequest request =
-                new UpdateProfileRequest(32, new BigDecimal("78.0"), "Advanced");
+        UpdateProfileRequest request = new UpdateProfileRequest(32, new BigDecimal("78.0"), "Advanced");
         doThrow(new IllegalArgumentException("User profile not found for userId: 99"))
                 .when(userProfileService)
                 .updateProfile(99L, request);

@@ -26,8 +26,7 @@ class JwtTokenProviderTest {
         // Configure JwtConfig with test values using lenient stubbing
         lenient()
                 .when(jwtConfig.getSecret())
-                .thenReturn(
-                        "test-secret-key-that-is-long-enough-for-hs512-algorithm-requirements-minimum-512-bits");
+                .thenReturn("test-secret-key-that-is-long-enough-for-hs512-algorithm-requirements-minimum-512-bits");
         lenient().when(jwtConfig.getAccessTokenTtl()).thenReturn(3600000L); // 1 hour
         lenient().when(jwtConfig.getRefreshTokenTtl()).thenReturn(86400000L); // 24 hours
 
@@ -114,8 +113,7 @@ class JwtTokenProviderTest {
     void shouldThrowTokenExpiredExceptionForExpiredToken() {
         // given - create a provider with very short TTL
         when(jwtConfig.getSecret())
-                .thenReturn(
-                        "test-secret-key-that-is-long-enough-for-hs512-algorithm-requirements-minimum-512-bits");
+                .thenReturn("test-secret-key-that-is-long-enough-for-hs512-algorithm-requirements-minimum-512-bits");
         when(jwtConfig.getAccessTokenTtl()).thenReturn(1L); // 1 millisecond
         lenient().when(jwtConfig.getRefreshTokenTtl()).thenReturn(86400000L);
         JwtTokenProvider shortLivedProvider = new JwtTokenProvider(jwtConfig);
@@ -139,8 +137,7 @@ class JwtTokenProviderTest {
     void shouldDetectExpiredToken() {
         // given - create a provider with very short TTL
         when(jwtConfig.getSecret())
-                .thenReturn(
-                        "test-secret-key-that-is-long-enough-for-hs512-algorithm-requirements-minimum-512-bits");
+                .thenReturn("test-secret-key-that-is-long-enough-for-hs512-algorithm-requirements-minimum-512-bits");
         when(jwtConfig.getAccessTokenTtl()).thenReturn(1L); // 1 millisecond
         lenient().when(jwtConfig.getRefreshTokenTtl()).thenReturn(86400000L);
         JwtTokenProvider shortLivedProvider = new JwtTokenProvider(jwtConfig);

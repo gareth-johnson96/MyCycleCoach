@@ -1,8 +1,5 @@
 package com.mycyclecoach.feature.trainingplan.controller;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.doThrow;
@@ -70,8 +67,8 @@ class TrainingPlanControllerTest {
         // given
         Long userId = 1L;
         LocalDate today = LocalDate.now();
-        TrainingPlanResponse response = new TrainingPlanResponse(
-                1L, userId, today, today.plusWeeks(12), "General Fitness", "ACTIVE");
+        TrainingPlanResponse response =
+                new TrainingPlanResponse(1L, userId, today, today.plusWeeks(12), "General Fitness", "ACTIVE");
         given(trainingPlanService.getCurrentPlan(userId)).willReturn(response);
 
         // when / then
