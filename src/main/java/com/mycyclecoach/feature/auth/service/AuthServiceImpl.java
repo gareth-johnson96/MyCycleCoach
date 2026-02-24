@@ -135,7 +135,8 @@ public class AuthServiceImpl implements AuthService {
                 .findByVerificationToken(token)
                 .orElseThrow(() -> new InvalidVerificationTokenException("Invalid verification token"));
 
-        if (user.getVerificationTokenExpiry().isBefore(LocalDateTime.now())) {
+        if (user.getVerificationTokenExpiry() == null
+                || user.getVerificationTokenExpiry().isBefore(LocalDateTime.now())) {
             throw new InvalidVerificationTokenException("Verification token has expired");
         }
 

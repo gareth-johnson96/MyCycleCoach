@@ -357,4 +357,27 @@ class AuthServiceImplTest {
         then(userRepository).should().findByVerificationToken(expiredToken);
         then(userRepository).should(never()).save(any(User.class));
     }
+
+    @Test
+    void shouldThrowExceptionWhenVerifyingWithNullExpiry() {
+        // given
+        String tokenWithNullExpiry = "token-null-expiry";
+        User user = User.builder()
+                .id(1L)
+                .email("test@example.com")
+                .emailVerified(false)
+                .verificationToken(tokenWithNullExpiry)
+                .verificationTokenExpiry(null) // Null expiry
+                .build();
+
+        given(userRepository.findByVerificationToken(tokenWithNullExpiry)).willReturn(Optional.of(user));
+
+        // when / then
+        assertThatThrownBy(() -> authService.verifyEmail(tokenWithNullExpiry))
+                .isInstanceOf(InvalidVerificationTokenException.class)
+                .hasMessageContaining("expired");
+
+        then(userRepository).should().findByVerificationToken(tokenWithNullExpiry);
+        then(userRepository).should(never()).save(any(User.class));
+    }
 }
