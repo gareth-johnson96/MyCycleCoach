@@ -107,4 +107,33 @@ public class StravaApiClient {
             throw new StravaApiException("Failed to fetch athlete activities", e);
         }
     }
+
+    public String getActivityGpx(String accessToken, Long activityId) {
+        log.info("Fetching GPX data for activity: {}", activityId);
+
+        try {
+            return webClientBuilder
+                    .build()
+                    .get()
+                    .uri(uriBuilder -> uriBuilder
+                            .scheme("https")
+                            .host("www.strava.com")
+                            .path("/api/v3/activities/{id}/export_gpx")
+                            .build(activityId))
+                    .header("Authorization", "Bearer " + accessToken)
+                    .retrieve()
+                    .onStatus(HttpStatusCode::isError, response -> response.bodyToMono(String.class)
+                            .flatMap(body -> {
+                                log.warn("Failed to fetch GPX for activity {}: {}", activityId, body);
+                                return Mono.error(
+                                        new StravaApiException("Failed to fetch GPX for activity " + activityId));
+                            }))
+                    .bodyToMono(String.class)
+                    .timeout(Duration.ofSeconds(30))
+                    .block();
+        } catch (Exception e) {
+            log.warn("Error fetching GPX data for activity {}: {}", activityId, e.getMessage());
+            return null; // Return null if GPX is not available
+        }
+    }
 }

@@ -38,6 +38,9 @@ class StravaSyncServiceImplTest {
     @Mock
     private StravaAuthService stravaAuthService;
 
+    @Mock
+    private com.mycyclecoach.feature.gpxanalysis.repository.GpxFileRepository gpxFileRepository;
+
     @InjectMocks
     private StravaSyncServiceImpl stravaSyncService;
 
@@ -75,7 +78,10 @@ class StravaSyncServiceImplTest {
                 new BigDecimal("12.5"),
                 null,
                 null,
-                null);
+                null,
+                "Ride",
+                null,
+                "Ride");
 
         given(stravaConnectionRepository.findByUserId(userId)).willReturn(Optional.of(connection));
         willDoNothing().given(stravaAuthService).refreshTokenIfNeeded(userId);
@@ -114,7 +120,10 @@ class StravaSyncServiceImplTest {
                 new BigDecimal("12.5"),
                 null,
                 null,
-                null);
+                null,
+                "Ride",
+                null,
+                "Ride");
 
         given(stravaConnectionRepository.findByUserId(userId)).willReturn(Optional.of(connection));
         willDoNothing().given(stravaAuthService).refreshTokenIfNeeded(userId);
@@ -209,7 +218,10 @@ class StravaSyncServiceImplTest {
                     new BigDecimal("12.5"),
                     null,
                     null,
-                    null));
+                    null,
+                    "Ride",
+                    null,
+                    "Ride"));
         }
 
         // Create 15 activities for page 2 (partial page)
@@ -227,7 +239,10 @@ class StravaSyncServiceImplTest {
                     new BigDecimal("12.5"),
                     null,
                     null,
-                    null));
+                    null,
+                    "Ride",
+                    null,
+                    "Ride"));
         }
 
         given(stravaConnectionRepository.findByUserId(userId)).willReturn(Optional.of(connection));
@@ -244,5 +259,105 @@ class StravaSyncServiceImplTest {
 
         // then
         then(rideRepository).should(times(45)).save(any(Ride.class));
+    }
+
+    @Test
+    void shouldDownloadAndStoreGpxWhenAvailable() {
+        // given
+        Long userId = 1L;
+        StravaConnection connection = StravaConnection.builder()
+                .userId(userId)
+                .accessToken("access-token")
+                .refreshToken("refresh-token")
+                .expiresAt(LocalDateTime.now().plusHours(1))
+                .build();
+
+        StravaActivity activity = new StravaActivity(
+                12345L,
+                "Morning Ride with Special! Chars & @#$",
+                new BigDecimal("25000"),
+                3600,
+                3700,
+                new BigDecimal("250"),
+                LocalDateTime.now(),
+                new BigDecimal("6.94"),
+                new BigDecimal("12.5"),
+                null,
+                null,
+                null,
+                "Ride",
+                null,
+                "Ride");
+
+        String gpxContent = "<?xml version=\"1.0\"?><gpx>test content</gpx>";
+        com.mycyclecoach.feature.gpxanalysis.domain.GpxFile savedGpxFile =
+                com.mycyclecoach.feature.gpxanalysis.domain.GpxFile.builder()
+                        .id(100L)
+                        .filename("12345_Morning_Ride_with_Special__Chars______.gpx")
+                        .content(gpxContent)
+                        .userId(userId)
+                        .build();
+
+        given(stravaConnectionRepository.findByUserId(userId)).willReturn(Optional.of(connection));
+        willDoNothing().given(stravaAuthService).refreshTokenIfNeeded(userId);
+        given(stravaApiClient.getAthleteActivities(eq("access-token"), eq(30), eq(1)))
+                .willReturn(List.of(activity));
+        given(stravaApiClient.getActivityGpx("access-token", 12345L)).willReturn(gpxContent);
+        given(gpxFileRepository.save(any(com.mycyclecoach.feature.gpxanalysis.domain.GpxFile.class)))
+                .willReturn(savedGpxFile);
+        given(rideRepository.existsByStravaActivityId(12345L)).willReturn(false);
+        given(rideRepository.save(any(Ride.class))).willAnswer(invocation -> invocation.getArgument(0));
+
+        // when
+        stravaSyncService.syncRidesForUser(userId);
+
+        // then
+        then(stravaApiClient).should().getActivityGpx("access-token", 12345L);
+        then(gpxFileRepository).should().save(any(com.mycyclecoach.feature.gpxanalysis.domain.GpxFile.class));
+        then(rideRepository).should().save(argThat(ride -> ride.getGpxFileId() != null && ride.getGpxFileId() == 100L));
+    }
+
+    @Test
+    void shouldHandleGpxDownloadFailureGracefully() {
+        // given
+        Long userId = 1L;
+        StravaConnection connection = StravaConnection.builder()
+                .userId(userId)
+                .accessToken("access-token")
+                .refreshToken("refresh-token")
+                .expiresAt(LocalDateTime.now().plusHours(1))
+                .build();
+
+        StravaActivity activity = new StravaActivity(
+                12345L,
+                "Morning Ride",
+                new BigDecimal("25000"),
+                3600,
+                3700,
+                new BigDecimal("250"),
+                LocalDateTime.now(),
+                new BigDecimal("6.94"),
+                new BigDecimal("12.5"),
+                null,
+                null,
+                null,
+                "Ride",
+                null,
+                "Ride");
+
+        given(stravaConnectionRepository.findByUserId(userId)).willReturn(Optional.of(connection));
+        willDoNothing().given(stravaAuthService).refreshTokenIfNeeded(userId);
+        given(stravaApiClient.getAthleteActivities(eq("access-token"), eq(30), eq(1)))
+                .willReturn(List.of(activity));
+        given(stravaApiClient.getActivityGpx("access-token", 12345L)).willReturn(null);
+        given(rideRepository.existsByStravaActivityId(12345L)).willReturn(false);
+        given(rideRepository.save(any(Ride.class))).willAnswer(invocation -> invocation.getArgument(0));
+
+        // when
+        stravaSyncService.syncRidesForUser(userId);
+
+        // then
+        then(rideRepository).should().save(argThat(ride -> ride.getGpxFileId() == null));
+        then(gpxFileRepository).should(never()).save(any(com.mycyclecoach.feature.gpxanalysis.domain.GpxFile.class));
     }
 }

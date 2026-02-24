@@ -105,4 +105,31 @@ class GpxAnalysisControllerTest {
                 .andExpect(jsonPath("$.totalDistanceKm").value(10.5))
                 .andExpect(jsonPath("$.estimatedRideTimeMinutes").value(28.3));
     }
+
+    @Test
+    void shouldReturn200WhenGettingAllUserGpxFilesSuccessfully() throws Exception {
+        // given
+        Long userId = 100L;
+        String token = "test-jwt-token";
+        com.mycyclecoach.feature.gpxanalysis.domain.GpxFileResponse gpxFile1 =
+                new com.mycyclecoach.feature.gpxanalysis.domain.GpxFileResponse(
+                        1L, "ride1.gpx", userId, LocalDateTime.now(), LocalDateTime.now());
+        com.mycyclecoach.feature.gpxanalysis.domain.GpxFileResponse gpxFile2 =
+                new com.mycyclecoach.feature.gpxanalysis.domain.GpxFileResponse(
+                        2L, "ride2.gpx", userId, LocalDateTime.now(), LocalDateTime.now());
+
+        given(jwtTokenProvider.getUserIdFromToken(token)).willReturn(userId);
+        given(gpxAnalysisService.getUserGpxFiles(userId)).willReturn(List.of(gpxFile1, gpxFile2));
+
+        // when / then
+        mockMvc.perform(get("/api/v1/gpx/user").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].id").value(1L))
+                .andExpect(jsonPath("$[0].filename").value("ride1.gpx"))
+                .andExpect(jsonPath("$[0].userId").value(userId))
+                .andExpect(jsonPath("$[1].id").value(2L))
+                .andExpect(jsonPath("$[1].filename").value("ride2.gpx"))
+                .andExpect(jsonPath("$[1].userId").value(userId));
+    }
 }

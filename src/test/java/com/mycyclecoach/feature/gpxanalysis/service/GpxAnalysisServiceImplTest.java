@@ -232,4 +232,56 @@ class GpxAnalysisServiceImplTest {
                 .isInstanceOf(GpxFileNotFoundException.class)
                 .hasMessageContaining("GPX file not found with filename");
     }
+
+    @Test
+    void shouldReturnAllGpxFilesForUserSuccessfully() {
+        // given
+        Long userId = 100L;
+        GpxFile gpxFile1 = GpxFile.builder()
+                .id(1L)
+                .filename("ride1.gpx")
+                .content("gpx content 1")
+                .userId(userId)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+        GpxFile gpxFile2 = GpxFile.builder()
+                .id(2L)
+                .filename("ride2.gpx")
+                .content("gpx content 2")
+                .userId(userId)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+
+        given(gpxFileRepository.findByUserId(userId)).willReturn(List.of(gpxFile1, gpxFile2));
+
+        // when
+        List<GpxFileResponse> result = gpxAnalysisService.getUserGpxFiles(userId);
+
+        // then
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).id()).isEqualTo(1L);
+        assertThat(result.get(0).filename()).isEqualTo("ride1.gpx");
+        assertThat(result.get(0).userId()).isEqualTo(userId);
+        assertThat(result.get(1).id()).isEqualTo(2L);
+        assertThat(result.get(1).filename()).isEqualTo("ride2.gpx");
+        assertThat(result.get(1).userId()).isEqualTo(userId);
+
+        then(gpxFileRepository).should().findByUserId(userId);
+    }
+
+    @Test
+    void shouldReturnEmptyListWhenUserHasNoGpxFiles() {
+        // given
+        Long userId = 999L;
+        given(gpxFileRepository.findByUserId(userId)).willReturn(List.of());
+
+        // when
+        List<GpxFileResponse> result = gpxAnalysisService.getUserGpxFiles(userId);
+
+        // then
+        assertThat(result).isEmpty();
+        then(gpxFileRepository).should().findByUserId(userId);
+    }
 }

@@ -104,6 +104,10 @@ class StravaControllerTest {
                 new BigDecimal("12.5"),
                 null,
                 null,
+                null,
+                "Ride",
+                null,
+                "Ride",
                 null);
 
         given(jwtTokenProvider.getUserIdFromToken(token)).willReturn(userId);

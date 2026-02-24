@@ -194,6 +194,23 @@ public class GpxAnalysisServiceImpl implements GpxAnalysisService {
         return climbs;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<GpxFileResponse> getUserGpxFiles(Long userId) {
+        log.info("Fetching all GPX files for userId={}", userId);
+
+        List<GpxFile> gpxFiles = gpxFileRepository.findByUserId(userId);
+
+        return gpxFiles.stream()
+                .map(gpxFile -> new GpxFileResponse(
+                        gpxFile.getId(),
+                        gpxFile.getFilename(),
+                        gpxFile.getUserId(),
+                        gpxFile.getCreatedAt(),
+                        gpxFile.getUpdatedAt()))
+                .toList();
+    }
+
     private double calculateDistance(WayPoint p1, WayPoint p2) {
         double lat1 = Math.toRadians(p1.getLatitude().doubleValue());
         double lon1 = Math.toRadians(p1.getLongitude().doubleValue());

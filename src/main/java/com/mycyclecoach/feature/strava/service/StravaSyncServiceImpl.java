@@ -1,5 +1,7 @@
 package com.mycyclecoach.feature.strava.service;
 
+import com.mycyclecoach.feature.gpxanalysis.domain.GpxFile;
+import com.mycyclecoach.feature.gpxanalysis.repository.GpxFileRepository;
 import com.mycyclecoach.feature.strava.client.StravaApiClient;
 import com.mycyclecoach.feature.strava.domain.Ride;
 import com.mycyclecoach.feature.strava.domain.StravaConnection;
@@ -24,6 +26,7 @@ public class StravaSyncServiceImpl implements StravaSyncService {
     private final StravaConnectionRepository stravaConnectionRepository;
     private final RideRepository rideRepository;
     private final StravaAuthService stravaAuthService;
+    private final GpxFileRepository gpxFileRepository;
 
     @Override
     @Transactional
@@ -54,6 +57,29 @@ public class StravaSyncServiceImpl implements StravaSyncService {
 
                 for (StravaActivity activity : activities) {
                     if (!rideRepository.existsByStravaActivityId(activity.id())) {
+                        // Try to download GPX data for the activity
+                        Long gpxFileId = null;
+                        try {
+                            String gpxContent =
+                                    stravaApiClient.getActivityGpx(connection.getAccessToken(), activity.id());
+                            if (gpxContent != null && !gpxContent.isEmpty()) {
+                                // Save GPX file
+                                GpxFile gpxFile = GpxFile.builder()
+                                        .filename(activity.id() + "_" + sanitizeFilename(activity.name()) + ".gpx")
+                                        .content(gpxContent)
+                                        .userId(userId)
+                                        .build();
+                                gpxFile = gpxFileRepository.save(gpxFile);
+                                gpxFileId = gpxFile.getId();
+                                log.info("Saved GPX file for activity: {} with id: {}", activity.id(), gpxFileId);
+                            } else {
+                                log.debug("No GPX data available for activity: {}", activity.id());
+                            }
+                        } catch (Exception e) {
+                            log.warn("Failed to download GPX for activity {}: {}", activity.id(), e.getMessage());
+                        }
+
+                        // Save ride with all fields including GPX reference
                         Ride ride = Ride.builder()
                                 .userId(userId)
                                 .stravaActivityId(activity.id())
@@ -68,6 +94,10 @@ public class StravaSyncServiceImpl implements StravaSyncService {
                                 .averageWatts(activity.averageWatts())
                                 .averageHeartrate(activity.averageHeartrate())
                                 .maxHeartrate(activity.maxHeartrate())
+                                .sportType(activity.sportType())
+                                .workoutType(activity.workoutType())
+                                .activityType(activity.activityType())
+                                .gpxFileId(gpxFileId)
                                 .build();
 
                         rideRepository.save(ride);
@@ -130,7 +160,20 @@ public class StravaSyncServiceImpl implements StravaSyncService {
                         ride.getMaxSpeed(),
                         ride.getAverageWatts(),
                         ride.getAverageHeartrate(),
-                        ride.getMaxHeartrate()))
+                        ride.getMaxHeartrate(),
+                        ride.getSportType(),
+                        ride.getWorkoutType(),
+                        ride.getActivityType(),
+                        ride.getGpxFileId()))
                 .collect(Collectors.toList());
+    }
+
+    private String sanitizeFilename(String name) {
+        if (name == null) {
+            return "activity";
+        }
+        // Replace any characters that aren't alphanumeric, dash, underscore, or space
+        String sanitized = name.replaceAll("[^a-zA-Z0-9-_ ]", "_").replaceAll("\\s+", "_");
+        return sanitized.substring(0, Math.min(sanitized.length(), 50));
     }
 }

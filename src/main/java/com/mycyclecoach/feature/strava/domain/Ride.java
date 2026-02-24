@@ -57,6 +57,18 @@ public class Ride {
     @Column(name = "max_heartrate")
     private BigDecimal maxHeartrate;
 
+    @Column(name = "sport_type")
+    private String sportType;
+
+    @Column(name = "workout_type")
+    private Integer workoutType;
+
+    @Column(name = "activity_type")
+    private String activityType;
+
+    @Column(name = "gpx_file_id")
+    private Long gpxFileId;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
