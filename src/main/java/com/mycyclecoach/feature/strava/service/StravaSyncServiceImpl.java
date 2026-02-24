@@ -173,8 +173,7 @@ public class StravaSyncServiceImpl implements StravaSyncService {
             return "activity";
         }
         // Replace any characters that aren't alphanumeric, dash, underscore, or space
-        return name.replaceAll("[^a-zA-Z0-9-_ ]", "_")
-                .replaceAll("\\s+", "_")
-                .substring(0, Math.min(name.length(), 50));
+        String sanitized = name.replaceAll("[^a-zA-Z0-9-_ ]", "_").replaceAll("\\s+", "_");
+        return sanitized.substring(0, Math.min(sanitized.length(), 50));
     }
 }
