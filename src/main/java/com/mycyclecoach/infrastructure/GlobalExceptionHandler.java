@@ -1,6 +1,8 @@
 package com.mycyclecoach.infrastructure;
 
+import com.mycyclecoach.feature.auth.exception.EmailNotVerifiedException;
 import com.mycyclecoach.feature.auth.exception.InvalidCredentialsException;
+import com.mycyclecoach.feature.auth.exception.InvalidVerificationTokenException;
 import com.mycyclecoach.feature.auth.exception.TokenExpiredException;
 import com.mycyclecoach.feature.auth.exception.UserAlreadyExistsException;
 import com.mycyclecoach.feature.gpxanalysis.domain.GpxFileNotFoundException;
@@ -41,6 +43,21 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleInvalidCredentials(InvalidCredentialsException ex, HttpServletRequest request) {
         log.warn("Invalid credentials: {}", ex.getMessage());
+        return new ErrorResponse(400, "Bad Request", ex.getMessage(), request.getRequestURI(), LocalDateTime.now());
+    }
+
+    @ExceptionHandler(EmailNotVerifiedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ErrorResponse handleEmailNotVerified(EmailNotVerifiedException ex, HttpServletRequest request) {
+        log.warn("Email not verified: {}", ex.getMessage());
+        return new ErrorResponse(403, "Forbidden", ex.getMessage(), request.getRequestURI(), LocalDateTime.now());
+    }
+
+    @ExceptionHandler(InvalidVerificationTokenException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleInvalidVerificationToken(
+            InvalidVerificationTokenException ex, HttpServletRequest request) {
+        log.warn("Invalid verification token: {}", ex.getMessage());
         return new ErrorResponse(400, "Bad Request", ex.getMessage(), request.getRequestURI(), LocalDateTime.now());
     }
 

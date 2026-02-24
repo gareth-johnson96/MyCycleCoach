@@ -60,4 +60,18 @@ public class AuthController {
         AuthResponse response = authService.refreshToken(request.refreshToken());
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/verify")
+    @Operation(
+            summary = "Verify email address",
+            description = "Verify user email address using the token sent via email")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Email verified successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid or expired verification token"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<Void> verifyEmail(@RequestParam String token) {
+        authService.verifyEmail(token);
+        return ResponseEntity.ok().build();
+    }
 }
