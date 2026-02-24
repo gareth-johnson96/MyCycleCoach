@@ -160,6 +160,44 @@ class StravaAuthServiceImplTest {
                 System.currentTimeMillis() / 1000 + 3600,
                 new StravaTokenResponse.StravaAthlete(12345L));
 
+        given(stravaConfig.getTokenRefreshBufferSeconds()).willReturn(3600);
+        given(stravaConnectionRepository.findByUserId(userId)).willReturn(Optional.of(connection));
+        given(stravaApiClient.refreshAccessToken(oldRefreshToken)).willReturn(tokenResponse);
+        given(stravaConnectionRepository.save(any(StravaConnection.class)))
+                .willAnswer(invocation -> invocation.getArgument(0));
+
+        // when
+        stravaAuthService.refreshTokenIfNeeded(userId);
+
+        // then
+        then(stravaApiClient).should().refreshAccessToken(oldRefreshToken);
+        then(stravaConnectionRepository).should().save(any(StravaConnection.class));
+    }
+
+    @Test
+    void shouldRefreshTokenWhenExpiringWithinBuffer() {
+        // given
+        Long userId = 1L;
+        String oldAccessToken = "old-access-token";
+        String oldRefreshToken = "old-refresh-token";
+        // Token expires in 30 minutes, but buffer is 1 hour
+        LocalDateTime expiringTime = LocalDateTime.now().plusMinutes(30);
+
+        StravaConnection connection = StravaConnection.builder()
+                .id(1L)
+                .userId(userId)
+                .accessToken(oldAccessToken)
+                .refreshToken(oldRefreshToken)
+                .expiresAt(expiringTime)
+                .build();
+
+        StravaTokenResponse tokenResponse = new StravaTokenResponse(
+                "new-access-token",
+                "new-refresh-token",
+                System.currentTimeMillis() / 1000 + 3600,
+                new StravaTokenResponse.StravaAthlete(12345L));
+
+        given(stravaConfig.getTokenRefreshBufferSeconds()).willReturn(3600); // 1 hour buffer
         given(stravaConnectionRepository.findByUserId(userId)).willReturn(Optional.of(connection));
         given(stravaApiClient.refreshAccessToken(oldRefreshToken)).willReturn(tokenResponse);
         given(stravaConnectionRepository.save(any(StravaConnection.class)))
@@ -177,7 +215,8 @@ class StravaAuthServiceImplTest {
     void shouldNotRefreshTokenWhenNotExpired() {
         // given
         Long userId = 1L;
-        LocalDateTime futureTime = LocalDateTime.now().plusHours(1);
+        // Token expires in 2 hours, buffer is 1 hour - no refresh needed
+        LocalDateTime futureTime = LocalDateTime.now().plusHours(2);
 
         StravaConnection connection = StravaConnection.builder()
                 .id(1L)
@@ -187,6 +226,7 @@ class StravaAuthServiceImplTest {
                 .expiresAt(futureTime)
                 .build();
 
+        given(stravaConfig.getTokenRefreshBufferSeconds()).willReturn(3600);
         given(stravaConnectionRepository.findByUserId(userId)).willReturn(Optional.of(connection));
 
         // when

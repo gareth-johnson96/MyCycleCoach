@@ -55,4 +55,8 @@ public class StravaConnection {
     public boolean isExpired() {
         return expiresAt.isBefore(LocalDateTime.now());
     }
+
+    public boolean isExpired(int bufferSeconds) {
+        return expiresAt.isBefore(LocalDateTime.now().plusSeconds(bufferSeconds));
+    }
 }

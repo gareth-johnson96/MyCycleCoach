@@ -119,8 +119,8 @@ public class StravaAuthServiceImpl implements StravaAuthService {
                 .findByUserId(userId)
                 .orElseThrow(() -> new StravaConnectionNotFoundException(userId));
 
-        if (connection.isExpired()) {
-            log.info("Token expired, refreshing for user: {}", userId);
+        if (connection.isExpired(stravaConfig.getTokenRefreshBufferSeconds())) {
+            log.info("Token expired or expiring soon, refreshing for user: {}", userId);
 
             StravaTokenResponse tokenResponse = stravaApiClient.refreshAccessToken(connection.getRefreshToken());
 
@@ -134,6 +134,8 @@ public class StravaAuthServiceImpl implements StravaAuthService {
             stravaConnectionRepository.save(connection);
 
             log.info("Token refreshed successfully for user: {}", userId);
+        } else {
+            log.debug("Token still valid for user: {}, no refresh needed", userId);
         }
     }
 }

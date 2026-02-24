@@ -30,6 +30,8 @@ public class StravaConfig {
     @NotBlank
     private String redirectUri;
 
+    private int tokenRefreshBufferSeconds = 3600; // Refresh tokens 1 hour before expiration
+
     private SyncConfig sync = new SyncConfig();
 
     @Data
