@@ -16,4 +16,7 @@ public record StravaActivity(
         @JsonProperty("max_speed") BigDecimal maxSpeed,
         @JsonProperty("average_watts") BigDecimal averageWatts,
         @JsonProperty("average_heartrate") BigDecimal averageHeartrate,
-        @JsonProperty("max_heartrate") BigDecimal maxHeartrate) {}
+        @JsonProperty("max_heartrate") BigDecimal maxHeartrate,
+        @JsonProperty("sport_type") String sportType,
+        @JsonProperty("workout_type") Integer workoutType,
+        @JsonProperty("type") String activityType) {}

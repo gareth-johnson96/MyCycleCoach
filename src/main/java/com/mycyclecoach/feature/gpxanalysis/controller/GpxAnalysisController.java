@@ -1,10 +1,13 @@
 package com.mycyclecoach.feature.gpxanalysis.controller;
 
+import com.mycyclecoach.feature.auth.security.JwtTokenProvider;
 import com.mycyclecoach.feature.gpxanalysis.domain.GpxAnalysisResponse;
+import com.mycyclecoach.feature.gpxanalysis.domain.GpxFileResponse;
 import com.mycyclecoach.feature.gpxanalysis.service.GpxAnalysisService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -18,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class GpxAnalysisController {
 
     private final GpxAnalysisService gpxAnalysisService;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
@@ -43,5 +47,19 @@ public class GpxAnalysisController {
     @ApiResponse(responseCode = "404", description = "GPX file not found")
     public GpxAnalysisResponse analyzeByFilename(@PathVariable String filename) {
         return gpxAnalysisService.analyzeByFilename(filename);
+    }
+
+    @GetMapping("/user")
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "Get all GPX files for the current user")
+    @ApiResponse(responseCode = "200", description = "GPX files retrieved successfully")
+    public List<GpxFileResponse> getAllUserGpxFiles(@RequestHeader("Authorization") String authHeader) {
+        Long userId = getUserIdFromAuthHeader(authHeader);
+        return gpxAnalysisService.getUserGpxFiles(userId);
+    }
+
+    private Long getUserIdFromAuthHeader(String authHeader) {
+        String token = authHeader.replace("Bearer ", "");
+        return jwtTokenProvider.getUserIdFromToken(token);
     }
 }

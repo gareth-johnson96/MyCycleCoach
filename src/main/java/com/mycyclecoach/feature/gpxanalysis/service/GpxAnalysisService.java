@@ -1,6 +1,8 @@
 package com.mycyclecoach.feature.gpxanalysis.service;
 
 import com.mycyclecoach.feature.gpxanalysis.domain.GpxAnalysisResponse;
+import com.mycyclecoach.feature.gpxanalysis.domain.GpxFileResponse;
+import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface GpxAnalysisService {
@@ -10,4 +12,6 @@ public interface GpxAnalysisService {
     GpxAnalysisResponse getGpxAnalysis(Long gpxFileId);
 
     GpxAnalysisResponse analyzeByFilename(String filename);
+
+    List<GpxFileResponse> getUserGpxFiles(Long userId);
 }

@@ -16,4 +16,8 @@ public record RideResponse(
         BigDecimal maxSpeed,
         BigDecimal averageWatts,
         BigDecimal averageHeartrate,
-        BigDecimal maxHeartrate) {}
+        BigDecimal maxHeartrate,
+        String sportType,
+        Integer workoutType,
+        String activityType,
+        Long gpxFileId) {}
