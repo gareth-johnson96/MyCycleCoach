@@ -1,6 +1,7 @@
 # Dockerfile for MyCycleCoach
-# Pre-built JAR approach: Build locally with Gradle, then containerize
-# This avoids issues with gradlew on different platforms
+# This Dockerfile expects a pre-built JAR file in build/libs/
+# Build the JAR first with: ./gradlew build
+# For CI/CD: GitHub Actions builds the JAR, then builds this Docker image
 
 # ============================================================================
 # RUNTIME STAGE (Development)
@@ -9,7 +10,7 @@ FROM eclipse-temurin:21-jre AS development
 
 WORKDIR /app
 
-# Copy the pre-built JAR (build locally with: ./gradlew build -x test)
+# Copy the pre-built JAR
 COPY build/libs/*.jar app.jar
 
 # Expose the application port
@@ -29,11 +30,11 @@ FROM eclipse-temurin:21-jre AS production
 
 WORKDIR /app
 
-# Copy the pre-built JAR (build locally with: ./gradlew build -x test)
+# Copy the pre-built JAR
 COPY build/libs/*.jar app.jar
 
 # Create a non-root user for security
-RUN useradd -m -u 1000 appuser && \
+RUN groupadd -r appuser && useradd -r -g appuser appuser && \
     chown -R appuser:appuser /app
 
 USER appuser

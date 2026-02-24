@@ -1,22 +1,59 @@
 # MyCycleCoach
 
+A REST API backend service that manages user training data, integrates with Strava, and generates personalized training plans through external AI services.
+
+## 🚀 Quick Links
+
+- **[Quick Start Deployment Guide](DEPLOYMENT_QUICKSTART.md)** - Get started with AWS EC2 deployment in 5 steps
+- **[Complete AWS Deployment Guide](AWS_DEPLOYMENT.md)** - Detailed AWS setup and production best practices
+- **[Strava Integration](STRAVA_INTEGRATION.md)** - Strava API integration details
+- **[GPX Analysis](GPX_ANALYSIS_FEATURE.md)** - GPX file analysis feature
+
+## 🏗️ Technology Stack
+
+- **Language**: Java 21 with Spring Boot 3.5.x
+- **Database**: PostgreSQL 16
+- **Authentication**: JWT tokens with Spring Security
+- **Containerization**: Docker
+- **Deployment**: AWS EC2 + Amazon ECR
+- **Build Tool**: Gradle
+- **External APIs**: Strava API, Training Plan Generator API
+
+## 📦 Deployment
+
+### AWS EC2 (Production)
+
+This project includes complete AWS EC2 deployment automation via GitHub Actions:
+
+```bash
+# See DEPLOYMENT_QUICKSTART.md for step-by-step setup
+# Deployment happens automatically on push to main branch
+git push origin main
+```
+
+**What you get:**
+- ✅ Automated Docker image builds
+- ✅ Amazon ECR image registry
+- ✅ One-command EC2 deployment
+- ✅ Health check verification
+- ✅ Environment variable management
+
+### Local Development
+
+```bash
+# With Docker Compose (recommended)
+docker-compose up
+
+# Or build and run locally
+./gradlew build
+java -jar build/libs/mycyclecoach-0.0.1-SNAPSHOT.jar
+```
+
 ## Plan 
 
 # Low Level Design - Training Platform Backend
 
 ## System Overview
-A REST API backend service that manages user training data, integrates with Strava, and generates personalized training plans through external AI services.
-
----
-
-## Technology Stack Assumptions
-- **Language**: Java/Spring Boot or Node.js/Express
-- **Database**: PostgreSQL
-- **Authentication**: JWT tokens
-- **Message Queue**: RabbitMQ/Kafka (for async operations)
-- **External APIs**: Strava API, Training Plan Generator API
-
----
 
 ## Architecture Components
 
