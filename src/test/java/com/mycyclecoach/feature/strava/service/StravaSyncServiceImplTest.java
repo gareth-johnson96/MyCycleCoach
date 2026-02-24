@@ -75,7 +75,10 @@ class StravaSyncServiceImplTest {
                 new BigDecimal("12.5"),
                 null,
                 null,
-                null);
+                null,
+                "Ride",
+                null,
+                "Ride");
 
         given(stravaConnectionRepository.findByUserId(userId)).willReturn(Optional.of(connection));
         willDoNothing().given(stravaAuthService).refreshTokenIfNeeded(userId);
@@ -114,7 +117,10 @@ class StravaSyncServiceImplTest {
                 new BigDecimal("12.5"),
                 null,
                 null,
-                null);
+                null,
+                "Ride",
+                null,
+                "Ride");
 
         given(stravaConnectionRepository.findByUserId(userId)).willReturn(Optional.of(connection));
         willDoNothing().given(stravaAuthService).refreshTokenIfNeeded(userId);
@@ -209,7 +215,10 @@ class StravaSyncServiceImplTest {
                     new BigDecimal("12.5"),
                     null,
                     null,
-                    null));
+                    null,
+                    "Ride",
+                    null,
+                    "Ride"));
         }
 
         // Create 15 activities for page 2 (partial page)
@@ -227,7 +236,10 @@ class StravaSyncServiceImplTest {
                     new BigDecimal("12.5"),
                     null,
                     null,
-                    null));
+                    null,
+                    "Ride",
+                    null,
+                    "Ride"));
         }
 
         given(stravaConnectionRepository.findByUserId(userId)).willReturn(Optional.of(connection));
