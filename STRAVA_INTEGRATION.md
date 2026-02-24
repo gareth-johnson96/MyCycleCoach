@@ -35,7 +35,10 @@ mycyclecoach:
     sync:
       enabled: true  # Enable/disable scheduled sync
       cron: "0 0 */6 * * *"  # Sync every 6 hours by default
+    token-refresh-buffer-seconds: 3600  # Refresh tokens 1 hour before expiration (default: 3600)
 ```
+
+The `token-refresh-buffer-seconds` configuration ensures that tokens are refreshed proactively before they expire, preventing API call failures due to expired tokens. The default value of 3600 seconds (1 hour) provides a safe buffer for token refresh.
 
 ## User Flow
 
@@ -171,9 +174,10 @@ Stores synchronized activities from Strava.
 ## Security Considerations
 
 1. **Token Storage**: Access and refresh tokens are stored securely in the database
-2. **Automatic Refresh**: Tokens are automatically refreshed when expired
-3. **Scopes**: The application requests minimal scopes: `read` and `activity:read_all`
-4. **User Isolation**: Each user can only access their own Strava data
+2. **Automatic Refresh**: Tokens are automatically refreshed when they expire or are about to expire
+3. **Proactive Refresh**: The system refreshes tokens before they expire (configurable buffer, default 1 hour) to prevent API call failures
+4. **Scopes**: The application requests minimal scopes: `read` and `activity:read_all`
+5. **User Isolation**: Each user can only access their own Strava data
 
 ## Error Handling
 
