@@ -25,6 +25,7 @@ configurations {
 
 dependencies {
     implementation(libs.spring.boot.starter.web)
+    implementation(libs.spring.boot.starter.webflux)
     implementation(libs.spring.boot.starter.security)
     implementation(libs.spring.boot.starter.actuator)
     implementation(libs.spring.boot.starter.data.jpa)
@@ -54,6 +55,8 @@ val jacocoExclusions = listOf(
     "com/mycyclecoach/Main.class",
     "com/mycyclecoach/config/**",
     "com/mycyclecoach/infrastructure/**",
+    "com/mycyclecoach/feature/strava/domain/**",
+    "com/mycyclecoach/feature/strava/dto/**",
 )
 
 tasks.jacocoTestReport {
