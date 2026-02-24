@@ -60,17 +60,18 @@ class StravaAuthServiceImplTest {
         Long athleteId = 12345L;
 
         StravaTokenResponse tokenResponse = new StravaTokenResponse(
-                "access-token", "refresh-token", System.currentTimeMillis() / 1000 + 3600,
+                "access-token",
+                "refresh-token",
+                System.currentTimeMillis() / 1000 + 3600,
                 new StravaTokenResponse.StravaAthlete(athleteId));
 
         given(stravaApiClient.exchangeCodeForToken(code)).willReturn(tokenResponse);
         given(stravaConnectionRepository.findByUserId(userId)).willReturn(Optional.empty());
-        given(stravaConnectionRepository.save(any(StravaConnection.class)))
-                .willAnswer(invocation -> {
-                    StravaConnection conn = invocation.getArgument(0);
-                    conn.setId(1L);
-                    return conn;
-                });
+        given(stravaConnectionRepository.save(any(StravaConnection.class))).willAnswer(invocation -> {
+            StravaConnection conn = invocation.getArgument(0);
+            conn.setId(1L);
+            return conn;
+        });
 
         // when
         StravaConnectionResponse response = stravaAuthService.handleOAuthCallback(userId, code);
@@ -125,10 +126,8 @@ class StravaAuthServiceImplTest {
     void shouldDeleteConnectionWhenDisconnecting() {
         // given
         Long userId = 1L;
-        StravaConnection connection = StravaConnection.builder()
-                .id(1L)
-                .userId(userId)
-                .build();
+        StravaConnection connection =
+                StravaConnection.builder().id(1L).userId(userId).build();
 
         given(stravaConnectionRepository.findByUserId(userId)).willReturn(Optional.of(connection));
 
@@ -137,5 +136,64 @@ class StravaAuthServiceImplTest {
 
         // then
         then(stravaConnectionRepository).should().delete(connection);
+    }
+
+    @Test
+    void shouldRefreshTokenWhenExpired() {
+        // given
+        Long userId = 1L;
+        String oldAccessToken = "old-access-token";
+        String oldRefreshToken = "old-refresh-token";
+        LocalDateTime expiredTime = LocalDateTime.now().minusHours(1);
+
+        StravaConnection connection = StravaConnection.builder()
+                .id(1L)
+                .userId(userId)
+                .accessToken(oldAccessToken)
+                .refreshToken(oldRefreshToken)
+                .expiresAt(expiredTime)
+                .build();
+
+        StravaTokenResponse tokenResponse = new StravaTokenResponse(
+                "new-access-token",
+                "new-refresh-token",
+                System.currentTimeMillis() / 1000 + 3600,
+                new StravaTokenResponse.StravaAthlete(12345L));
+
+        given(stravaConnectionRepository.findByUserId(userId)).willReturn(Optional.of(connection));
+        given(stravaApiClient.refreshAccessToken(oldRefreshToken)).willReturn(tokenResponse);
+        given(stravaConnectionRepository.save(any(StravaConnection.class)))
+                .willAnswer(invocation -> invocation.getArgument(0));
+
+        // when
+        stravaAuthService.refreshTokenIfNeeded(userId);
+
+        // then
+        then(stravaApiClient).should().refreshAccessToken(oldRefreshToken);
+        then(stravaConnectionRepository).should().save(any(StravaConnection.class));
+    }
+
+    @Test
+    void shouldNotRefreshTokenWhenNotExpired() {
+        // given
+        Long userId = 1L;
+        LocalDateTime futureTime = LocalDateTime.now().plusHours(1);
+
+        StravaConnection connection = StravaConnection.builder()
+                .id(1L)
+                .userId(userId)
+                .accessToken("access-token")
+                .refreshToken("refresh-token")
+                .expiresAt(futureTime)
+                .build();
+
+        given(stravaConnectionRepository.findByUserId(userId)).willReturn(Optional.of(connection));
+
+        // when
+        stravaAuthService.refreshTokenIfNeeded(userId);
+
+        // then
+        then(stravaApiClient).should(never()).refreshAccessToken(anyString());
+        then(stravaConnectionRepository).should(never()).save(any(StravaConnection.class));
     }
 }

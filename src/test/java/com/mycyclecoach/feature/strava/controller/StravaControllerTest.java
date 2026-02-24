@@ -56,15 +56,13 @@ class StravaControllerTest {
         // given
         Long userId = 1L;
         String token = "test-token";
-        StravaConnectionResponse response =
-                new StravaConnectionResponse(1L, userId, 12345L, true, LocalDateTime.now());
+        StravaConnectionResponse response = new StravaConnectionResponse(1L, userId, 12345L, true, LocalDateTime.now());
 
         given(jwtTokenProvider.getUserIdFromToken(token)).willReturn(userId);
         given(stravaAuthService.getConnectionStatus(userId)).willReturn(response);
 
         // when / then
-        mockMvc.perform(
-                        get("/api/v1/strava/connection").header("Authorization", "Bearer " + token))
+        mockMvc.perform(get("/api/v1/strava/connection").header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userId").value(userId))
                 .andExpect(jsonPath("$.stravaAthleteId").value(12345L))
@@ -81,8 +79,7 @@ class StravaControllerTest {
         willDoNothing().given(stravaAuthService).disconnect(userId);
 
         // when / then
-        mockMvc.perform(
-                        delete("/api/v1/strava/connection").header("Authorization", "Bearer " + token))
+        mockMvc.perform(delete("/api/v1/strava/connection").header("Authorization", "Bearer " + token))
                 .andExpect(status().isNoContent());
 
         then(stravaAuthService).should().disconnect(userId);

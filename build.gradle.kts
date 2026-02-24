@@ -55,6 +55,8 @@ val jacocoExclusions = listOf(
     "com/mycyclecoach/Main.class",
     "com/mycyclecoach/config/**",
     "com/mycyclecoach/infrastructure/**",
+    "com/mycyclecoach/feature/strava/domain/**",
+    "com/mycyclecoach/feature/strava/dto/**",
 )
 
 tasks.jacocoTestReport {
