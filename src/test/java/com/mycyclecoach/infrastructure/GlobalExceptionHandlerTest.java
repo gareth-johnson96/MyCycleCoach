@@ -12,7 +12,9 @@ import com.mycyclecoach.config.JwtConfig;
 import com.mycyclecoach.feature.auth.controller.AuthController;
 import com.mycyclecoach.feature.auth.dto.LoginRequest;
 import com.mycyclecoach.feature.auth.dto.RegisterRequest;
+import com.mycyclecoach.feature.auth.exception.EmailNotVerifiedException;
 import com.mycyclecoach.feature.auth.exception.InvalidCredentialsException;
+import com.mycyclecoach.feature.auth.exception.InvalidVerificationTokenException;
 import com.mycyclecoach.feature.auth.exception.TokenExpiredException;
 import com.mycyclecoach.feature.auth.exception.UserAlreadyExistsException;
 import com.mycyclecoach.feature.auth.security.JwtAuthenticationFilter;
@@ -168,5 +170,42 @@ class GlobalExceptionHandlerTest {
         assertThat(errorResponse.message()).isNotBlank();
         assertThat(errorResponse.path()).isEqualTo("/api/v1/auth/register");
         assertThat(errorResponse.timestamp()).isNotNull();
+    }
+
+    @Test
+    void shouldHandleEmailNotVerifiedException() throws Exception {
+        // given
+        LoginRequest request = new LoginRequest("test@example.com", "password123");
+        given(authService.authenticateUser(request))
+                .willThrow(new EmailNotVerifiedException("Please verify your email address"));
+
+        // when / then
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403))
+                .andExpect(jsonPath("$.error").value("Forbidden"))
+                .andExpect(jsonPath("$.message").value("Please verify your email address"))
+                .andExpect(jsonPath("$.path").value("/api/v1/auth/login"))
+                .andExpect(jsonPath("$.timestamp").exists());
+    }
+
+    @Test
+    void shouldHandleInvalidVerificationTokenException() throws Exception {
+        // given
+        doThrow(new InvalidVerificationTokenException("Invalid verification token"))
+                .when(authService)
+                .verifyEmail("invalid-token");
+
+        // when / then
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/v1/auth/verify")
+                        .param("token", "invalid-token"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Invalid verification token"))
+                .andExpect(jsonPath("$.path").value("/api/v1/auth/verify"))
+                .andExpect(jsonPath("$.timestamp").exists());
     }
 }

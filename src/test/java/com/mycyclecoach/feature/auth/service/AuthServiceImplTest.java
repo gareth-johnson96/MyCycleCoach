@@ -15,7 +15,9 @@ import com.mycyclecoach.feature.auth.domain.User;
 import com.mycyclecoach.feature.auth.dto.AuthResponse;
 import com.mycyclecoach.feature.auth.dto.LoginRequest;
 import com.mycyclecoach.feature.auth.dto.RegisterRequest;
+import com.mycyclecoach.feature.auth.exception.EmailNotVerifiedException;
 import com.mycyclecoach.feature.auth.exception.InvalidCredentialsException;
+import com.mycyclecoach.feature.auth.exception.InvalidVerificationTokenException;
 import com.mycyclecoach.feature.auth.exception.TokenExpiredException;
 import com.mycyclecoach.feature.auth.exception.UserAlreadyExistsException;
 import com.mycyclecoach.feature.auth.repository.RefreshTokenRepository;
@@ -53,6 +55,9 @@ class AuthServiceImplTest {
     @Mock
     private BCryptPasswordEncoder passwordEncoder;
 
+    @Mock
+    private EmailService emailService;
+
     @InjectMocks
     private AuthServiceImpl authService;
 
@@ -65,6 +70,7 @@ class AuthServiceImplTest {
                 .id(1L)
                 .email(request.email())
                 .passwordHash(encodedPassword)
+                .emailVerified(false)
                 .build();
 
         given(userRepository.existsByEmail(request.email())).willReturn(false);
@@ -80,6 +86,7 @@ class AuthServiceImplTest {
         then(passwordEncoder).should().encode(request.password());
         then(userRepository).should().save(any(User.class));
         then(userProfileRepository).should().save(any(UserProfile.class));
+        then(emailService).should().sendVerificationEmail(anyString(), anyString());
     }
 
     @Test
@@ -107,6 +114,7 @@ class AuthServiceImplTest {
                 .id(1L)
                 .email(request.email())
                 .passwordHash(hashedPassword)
+                .emailVerified(true)
                 .build();
         String accessToken = "access.jwt.token";
         String refreshToken = "refresh.jwt.token";
@@ -263,5 +271,90 @@ class AuthServiceImplTest {
 
         // then
         then(jwtTokenProvider).should().validateToken(token);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenAuthenticatingUnverifiedUser() {
+        // given
+        LoginRequest request = new LoginRequest("test@example.com", "password123");
+        User user = User.builder()
+                .id(1L)
+                .email(request.email())
+                .passwordHash("$2a$10$hashedpassword")
+                .emailVerified(false)
+                .build();
+
+        given(userRepository.findByEmail(request.email())).willReturn(Optional.of(user));
+        given(passwordEncoder.matches(request.password(), user.getPasswordHash()))
+                .willReturn(true);
+
+        // when / then
+        assertThatThrownBy(() -> authService.authenticateUser(request))
+                .isInstanceOf(EmailNotVerifiedException.class)
+                .hasMessageContaining("verify your email");
+
+        then(userRepository).should().findByEmail(request.email());
+        then(jwtTokenProvider).should(never()).generateAccessToken(anyLong());
+    }
+
+    @Test
+    void shouldVerifyEmailSuccessfully() {
+        // given
+        String verificationToken = "valid-token-123";
+        User user = User.builder()
+                .id(1L)
+                .email("test@example.com")
+                .emailVerified(false)
+                .verificationToken(verificationToken)
+                .verificationTokenExpiry(LocalDateTime.now().plusHours(1))
+                .build();
+
+        given(userRepository.findByVerificationToken(verificationToken)).willReturn(Optional.of(user));
+        given(userRepository.save(any(User.class))).willReturn(user);
+
+        // when
+        authService.verifyEmail(verificationToken);
+
+        // then
+        then(userRepository).should().findByVerificationToken(verificationToken);
+        then(userRepository).should().save(any(User.class));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenVerifyingWithInvalidToken() {
+        // given
+        String invalidToken = "invalid-token";
+        given(userRepository.findByVerificationToken(invalidToken)).willReturn(Optional.empty());
+
+        // when / then
+        assertThatThrownBy(() -> authService.verifyEmail(invalidToken))
+                .isInstanceOf(InvalidVerificationTokenException.class)
+                .hasMessageContaining("Invalid verification token");
+
+        then(userRepository).should().findByVerificationToken(invalidToken);
+        then(userRepository).should(never()).save(any(User.class));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenVerifyingWithExpiredToken() {
+        // given
+        String expiredToken = "expired-token";
+        User user = User.builder()
+                .id(1L)
+                .email("test@example.com")
+                .emailVerified(false)
+                .verificationToken(expiredToken)
+                .verificationTokenExpiry(LocalDateTime.now().minusHours(1)) // Expired
+                .build();
+
+        given(userRepository.findByVerificationToken(expiredToken)).willReturn(Optional.of(user));
+
+        // when / then
+        assertThatThrownBy(() -> authService.verifyEmail(expiredToken))
+                .isInstanceOf(InvalidVerificationTokenException.class)
+                .hasMessageContaining("expired");
+
+        then(userRepository).should().findByVerificationToken(expiredToken);
+        then(userRepository).should(never()).save(any(User.class));
     }
 }
