@@ -89,6 +89,31 @@ public class GlobalExceptionHandler {
         return new ErrorResponse(400, "Bad Request", ex.getMessage(), request.getRequestURI(), LocalDateTime.now());
     }
 
+    @ExceptionHandler(com.mycyclecoach.feature.strava.exception.StravaConnectionNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleStravaConnectionNotFound(
+            com.mycyclecoach.feature.strava.exception.StravaConnectionNotFoundException ex,
+            HttpServletRequest request) {
+        log.warn("Strava connection not found: {}", ex.getMessage());
+        return new ErrorResponse(404, "Not Found", ex.getMessage(), request.getRequestURI(), LocalDateTime.now());
+    }
+
+    @ExceptionHandler(com.mycyclecoach.feature.strava.exception.StravaOAuthException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleStravaOAuth(
+            com.mycyclecoach.feature.strava.exception.StravaOAuthException ex, HttpServletRequest request) {
+        log.error("Strava OAuth error: {}", ex.getMessage());
+        return new ErrorResponse(400, "Bad Request", ex.getMessage(), request.getRequestURI(), LocalDateTime.now());
+    }
+
+    @ExceptionHandler(com.mycyclecoach.feature.strava.exception.StravaApiException.class)
+    @ResponseStatus(HttpStatus.BAD_GATEWAY)
+    public ErrorResponse handleStravaApi(
+            com.mycyclecoach.feature.strava.exception.StravaApiException ex, HttpServletRequest request) {
+        log.error("Strava API error: {}", ex.getMessage());
+        return new ErrorResponse(502, "Bad Gateway", ex.getMessage(), request.getRequestURI(), LocalDateTime.now());
+    }
+
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleGeneric(Exception ex, HttpServletRequest request) {
